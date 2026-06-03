@@ -162,7 +162,9 @@ export function PlanningBoard({
     const previous = localShifts;
     setLocalShifts((prev) =>
       prev.map((s) =>
-        s.id === id ? { ...s, employee_id: employeeId, shift_date: date } : s,
+        s.id === id
+          ? { ...s, employee_id: employeeId, shift_date: date, status: "draft" }
+          : s,
       ),
     );
 
@@ -187,7 +189,9 @@ export function PlanningBoard({
     const previous = localShifts;
     setLocalShifts((prev) =>
       prev.map((s) =>
-        s.id === id ? { ...s, employee_id: null, shift_date: date } : s,
+        s.id === id
+          ? { ...s, employee_id: null, shift_date: date, status: "draft" }
+          : s,
       ),
     );
 

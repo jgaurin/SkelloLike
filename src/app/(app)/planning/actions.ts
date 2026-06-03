@@ -157,6 +157,7 @@ export async function updateShift(
   if (err) return { ok: false, error: err };
 
   const supabase = await createClient();
+  // Une modification après publication repasse le shift en brouillon.
   const { error } = await supabase
     .from("shifts")
     .update({
@@ -167,6 +168,7 @@ export async function updateShift(
       end_time: s.endTime,
       break_minutes: s.breakMinutes,
       note_manager: s.noteManager,
+      status: "draft",
     })
     .eq("id", shiftId);
 
@@ -204,9 +206,11 @@ export async function moveShift(
   if (!canManage(ctx.role)) return { ok: false, error: "Droits insuffisants." };
 
   const supabase = await createClient();
+  // Un déplacement après publication repasse le shift en brouillon : il faudra
+  // republier pour que les employés voient le changement.
   const { error } = await supabase
     .from("shifts")
-    .update({ shift_date: newDate, employee_id: newEmployeeId })
+    .update({ shift_date: newDate, employee_id: newEmployeeId, status: "draft" })
     .eq("id", shiftId);
 
   if (error) return { ok: false, error: "Déplacement impossible." };
