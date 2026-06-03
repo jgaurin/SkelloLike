@@ -59,6 +59,7 @@ export function PlanningBoard({
   contractHours,
   employeePositions,
   breakRules,
+  templates,
   published,
   canManage,
 }: {
@@ -76,6 +77,7 @@ export function PlanningBoard({
   contractHours: [string, number][];
   employeePositions: [string, string[]][];
   breakRules: BreakRule[];
+  templates: { id: string; name: string }[];
   published: boolean;
   canManage: boolean;
 }) {
@@ -505,6 +507,7 @@ export function PlanningBoard({
         anchor={anchor}
         weekStart={weekStart}
         rangeLabel={rangeLabel}
+        templates={templates}
         published={published}
         canManage={canManage}
       />

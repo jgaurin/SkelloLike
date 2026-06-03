@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { publishSchedule } from "./actions";
+import { PlanningTools } from "./planning-tools";
 import {
   shiftWeek,
   shiftDay,
@@ -39,6 +40,7 @@ export function PlanningToolbar({
   anchor,
   weekStart,
   rangeLabel,
+  templates,
   published,
   canManage,
 }: {
@@ -48,6 +50,7 @@ export function PlanningToolbar({
   anchor: string;
   weekStart: string;
   rangeLabel: string;
+  templates: { id: string; name: string }[];
   published: boolean;
   canManage: boolean;
 }) {
@@ -163,6 +166,13 @@ export function PlanningToolbar({
           <Badge variant="outline" className="text-muted-foreground">
             Brouillon
           </Badge>
+        )}
+        {canManage && (
+          <PlanningTools
+            locationId={locationId}
+            weekStart={weekStart}
+            templates={templates}
+          />
         )}
         {canManage && (
           <Button size="sm" onClick={onPublish} disabled={isPending}>

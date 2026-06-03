@@ -165,12 +165,19 @@ export default async function PlanningPage({
 
   // Statut de publication : basé sur le schedule de la semaine de l'ancre.
   const weekStart = view === "week" ? anchor : getMonday(baseDate);
-  const { data: schedule } = await supabase
-    .from("schedules")
-    .select("status")
-    .eq("location_id", locationId)
-    .eq("week_start", weekStart)
-    .maybeSingle();
+  const [{ data: schedule }, { data: templates }] = await Promise.all([
+    supabase
+      .from("schedules")
+      .select("status")
+      .eq("location_id", locationId)
+      .eq("week_start", weekStart)
+      .maybeSingle(),
+    supabase
+      .from("schedule_templates")
+      .select("id, name")
+      .eq("location_id", locationId)
+      .order("created_at", { ascending: false }),
+  ]);
 
   return (
     <>
@@ -192,6 +199,7 @@ export default async function PlanningPage({
           ([id, set]) => [id, Array.from(set)] as [string, string[]],
         )}
         breakRules={breakRules}
+        templates={templates ?? []}
         published={schedule?.status === "published"}
         canManage={canManage}
       />
