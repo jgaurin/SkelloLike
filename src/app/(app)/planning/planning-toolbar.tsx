@@ -6,7 +6,14 @@ import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { publishSchedule } from "./actions";
-import { formatWeekRange, shiftWeek, getMonday } from "@/lib/week";
+import {
+  shiftWeek,
+  shiftDay,
+  shiftMonth,
+  getMonday,
+  toISODate,
+  type PlanningView,
+} from "@/lib/week";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,25 +26,62 @@ import {
 
 type Location = { id: string; name: string };
 
+const VIEW_LABELS: Record<PlanningView, string> = {
+  day: "Jour",
+  week: "Semaine",
+  month: "Mois",
+};
+
 export function PlanningToolbar({
+  view,
   locations,
   locationId,
+  anchor,
   weekStart,
+  rangeLabel,
   published,
   canManage,
 }: {
+  view: PlanningView;
   locations: Location[];
   locationId: string;
+  anchor: string;
   weekStart: string;
+  rangeLabel: string;
   published: boolean;
   canManage: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const navigate = (site: string, week: string) => {
-    router.push(`/planning?site=${site}&week=${week}`);
+  const go = (opts: { site?: string; date?: string; view?: string }) => {
+    const site = opts.site ?? locationId;
+    const date = opts.date ?? anchor;
+    const v = opts.view ?? view;
+    router.push(`/planning?site=${site}&view=${v}&date=${date}`);
   };
+
+  const prev = () =>
+    go({
+      date:
+        view === "day"
+          ? shiftDay(anchor, -1)
+          : view === "month"
+            ? shiftMonth(anchor, -1)
+            : shiftWeek(anchor, -1),
+    });
+
+  const next = () =>
+    go({
+      date:
+        view === "day"
+          ? shiftDay(anchor, 1)
+          : view === "month"
+            ? shiftMonth(anchor, 1)
+            : shiftWeek(anchor, 1),
+    });
+
+  const today = () => go({ date: toISODate(new Date()) });
 
   const onPublish = () => {
     startTransition(async () => {
@@ -49,13 +93,9 @@ export function PlanningToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-3 border-b bg-background px-6 py-3">
-      {/* Sélecteur d'établissement */}
       {locations.length > 1 && (
-        <Select
-          value={locationId}
-          onValueChange={(v) => navigate(v, weekStart)}
-        >
-          <SelectTrigger className="w-52">
+        <Select value={locationId} onValueChange={(v) => go({ site: v })}>
+          <SelectTrigger className="w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -68,38 +108,48 @@ export function PlanningToolbar({
         </Select>
       )}
 
-      {/* Navigation semaine */}
+      {/* Sélecteur de vue Jour / Semaine / Mois */}
+      <div className="flex rounded-md border p-0.5">
+        {(Object.keys(VIEW_LABELS) as PlanningView[]).map((v) => (
+          <Button
+            key={v}
+            type="button"
+            variant={view === v ? "default" : "ghost"}
+            size="sm"
+            className="h-7 px-3"
+            onClick={() => go({ view: v })}
+          >
+            {VIEW_LABELS[v]}
+          </Button>
+        ))}
+      </div>
+
+      {/* Navigation */}
       <div className="flex items-center gap-1">
         <Button
           variant="outline"
           size="icon"
           className="size-8"
-          onClick={() => navigate(locationId, shiftWeek(weekStart, -1))}
-          aria-label="Semaine précédente"
+          onClick={prev}
+          aria-label="Précédent"
         >
           <ChevronLeft className="size-4" />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(locationId, getMonday())}
-        >
+        <Button variant="outline" size="sm" onClick={today}>
           Aujourd&apos;hui
         </Button>
         <Button
           variant="outline"
           size="icon"
           className="size-8"
-          onClick={() => navigate(locationId, shiftWeek(weekStart, 1))}
-          aria-label="Semaine suivante"
+          onClick={next}
+          aria-label="Suivant"
         >
           <ChevronRight className="size-4" />
         </Button>
       </div>
 
-      <span className="text-sm font-medium capitalize">
-        {formatWeekRange(weekStart)}
-      </span>
+      <span className="text-sm font-medium capitalize">{rangeLabel}</span>
 
       <div className="ml-auto flex items-center gap-2">
         {published ? (

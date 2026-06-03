@@ -130,13 +130,16 @@ Organization (entreprise cliente)
 ## 6. Planning (module central)
 
 ### 6.1 Vues disponibles
-| Vue | Description |
-|---|---|
-| Semaine | Vue principale, 7 jours, liste des employés en lignes |
-| Mois | Vue mensuelle condensée par employé |
-| Jour | Vue détaillée d'une seule journée |
-| Multi-sites | Vue agrégée de plusieurs établissements |
-| Par poste | Regroupement par qualification plutôt que par employé |
+| Vue | Description | Statut |
+|---|---|---|
+| Semaine | Vue principale, 7 jours, liste des employés en lignes | ✅ fait |
+| Jour | Vue détaillée d'une seule journée | ✅ fait |
+| Mois | Vue mensuelle condensée par employé | ✅ fait |
+| Multi-sites | Vue agrégée de plusieurs établissements | ⬜ à faire |
+| Par poste | Regroupement par qualification plutôt que par employé | ⬜ à faire |
+
+> **Important UX :** le planning DOIT toujours proposer le basculement
+> **Jour / Semaine / Mois** via un sélecteur de vue dans la barre d'outils.
 
 ### 6.2 Structure d'un shift (créneau)
 - Employé assigné

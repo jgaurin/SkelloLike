@@ -3,7 +3,17 @@ import { CalendarDays } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
-import { getMonday, weekDates, trimSeconds } from "@/lib/week";
+import {
+  getMonday,
+  getMonthStart,
+  weekDates,
+  viewRange,
+  isPlanningView,
+  trimSeconds,
+  toISODate,
+  fromISODate,
+  type PlanningView,
+} from "@/lib/week";
 import { PlanningBoard } from "./planning-board";
 
 const MANAGER_ROLES = [
@@ -16,14 +26,15 @@ const MANAGER_ROLES = [
 export default async function PlanningPage({
   searchParams,
 }: {
-  searchParams: Promise<{ site?: string; week?: string }>;
+  searchParams: Promise<{ site?: string; date?: string; view?: string }>;
 }) {
   const ctx = await getAppContext();
   const supabase = await createClient();
   const canManage = MANAGER_ROLES.includes(ctx.role);
   const params = await searchParams;
 
-  // Établissements de l'org (pour le sélecteur).
+  const view: PlanningView = isPlanningView(params.view) ? params.view : "week";
+
   const { data: locations } = await supabase
     .from("locations")
     .select("id, name")
@@ -46,60 +57,71 @@ export default async function PlanningPage({
 
   const locationId =
     locations.find((l) => l.id === params.site)?.id ?? locations[0].id;
-  const weekStart = params.week ? getMonday(new Date(params.week)) : getMonday();
-  const days = weekDates(weekStart);
 
-  // Employés actifs + postes + shifts de la semaine, en parallèle.
-  const [{ data: employees }, { data: positions }, { data: schedule }] =
-    await Promise.all([
-      supabase
-        .from("employees")
-        .select("id, first_name, last_name")
-        .eq("status", "active")
-        .order("last_name"),
-      supabase.from("positions").select("id, name, color").order("name"),
-      supabase
-        .from("schedules")
-        .select("id, status")
-        .eq("location_id", locationId)
-        .eq("week_start", weekStart)
-        .maybeSingle(),
-    ]);
+  // Ancre normalisée selon la vue.
+  const baseDate = params.date ? fromISODate(params.date) : new Date();
+  const anchor =
+    view === "day"
+      ? params.date ?? toISODate(new Date())
+      : view === "month"
+        ? getMonthStart(baseDate)
+        : getMonday(baseDate);
 
-  let shifts: Array<{
-    id: string;
-    employee_id: string | null;
-    position_id: string | null;
-    shift_date: string;
-    start_time: string;
-    end_time: string;
-    break_minutes: number;
-    note_manager: string | null;
-    status: string;
-  }> = [];
+  const range = viewRange(view, anchor);
 
-  if (schedule) {
-    const { data } = await supabase
-      .from("shifts")
-      .select(
-        "id, employee_id, position_id, shift_date, start_time, end_time, break_minutes, note_manager, status",
-      )
-      .eq("schedule_id", schedule.id);
-    shifts = (data ?? []).map((s) => ({
-      ...s,
-      start_time: trimSeconds(s.start_time),
-      end_time: trimSeconds(s.end_time),
-    }));
-  }
+  // Employés actifs + postes + shifts sur la plage de la vue.
+  const [{ data: employees }, { data: positions }] = await Promise.all([
+    supabase
+      .from("employees")
+      .select("id, first_name, last_name")
+      .eq("status", "active")
+      .order("last_name"),
+    supabase.from("positions").select("id, name, color").order("name"),
+  ]);
+
+  // Les shifts sont chargés par plage de dates (indépendamment du schedule),
+  // pour couvrir un mois qui chevauche plusieurs semaines.
+  const { data: shiftRows } = await supabase
+    .from("shifts")
+    .select(
+      "id, employee_id, position_id, shift_date, start_time, end_time, break_minutes, note_manager, status, schedules!inner(location_id)",
+    )
+    .gte("shift_date", range.from)
+    .lte("shift_date", range.to)
+    .eq("schedules.location_id", locationId);
+
+  const shifts = (shiftRows ?? []).map((s) => ({
+    id: s.id,
+    employee_id: s.employee_id,
+    position_id: s.position_id,
+    shift_date: s.shift_date,
+    start_time: trimSeconds(s.start_time),
+    end_time: trimSeconds(s.end_time),
+    break_minutes: s.break_minutes,
+    note_manager: s.note_manager,
+    status: s.status,
+  }));
+
+  // Statut de publication : basé sur le schedule de la semaine de l'ancre.
+  const weekStart = view === "week" ? anchor : getMonday(baseDate);
+  const { data: schedule } = await supabase
+    .from("schedules")
+    .select("status")
+    .eq("location_id", locationId)
+    .eq("week_start", weekStart)
+    .maybeSingle();
 
   return (
     <>
       <AppHeader title="Planning" fullName={ctx.fullName} email={ctx.email} />
       <PlanningBoard
+        view={view}
         locations={locations}
         locationId={locationId}
+        anchor={anchor}
         weekStart={weekStart}
-        days={days}
+        rangeLabel={range.label}
+        days={weekDates(weekStart)}
         employees={employees ?? []}
         positions={positions ?? []}
         shifts={shifts}

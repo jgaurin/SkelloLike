@@ -42,6 +42,11 @@ propre design**. Jamais de code/assets/logo/contenus propriétaires copiés.
 - Régénérer les types DB après migration : `npm run db:types`.
 - Avant de livrer un écran : `npx tsc --noEmit` doit passer + checklist du `DESIGN_SYSTEM.md`.
 
+## Planning (rappels)
+- 3 vues obligatoires : **Jour / Semaine / Mois** (sélecteur dans la toolbar). Cf. cahier §6.1.
+- Sauvegarde immédiate de chaque action (création/déplacement/édition). « Publier »
+  = rendre visible aux employés (brouillon → publié), pas une sauvegarde.
+
 ## Références
 - `CAHIER_DES_CHARGES.md` — spec fonctionnelle complète (24 sections, 3 phases).
 - `DESIGN_SYSTEM.md` — charte visuelle détaillée.

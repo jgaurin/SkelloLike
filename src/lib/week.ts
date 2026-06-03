@@ -104,3 +104,77 @@ export function shiftHours(
 export function trimSeconds(time: string): string {
   return time.slice(0, 5);
 }
+
+// ── Vues du planning ──────────────────────────────────────────────────────
+
+export type PlanningView = "day" | "week" | "month";
+
+export function isPlanningView(v: string | undefined): v is PlanningView {
+  return v === "day" || v === "week" || v === "month";
+}
+
+/** Décale un jour (ISO) de n jours. */
+export function shiftDay(iso: string, days: number): string {
+  return toISODate(new Date(fromISODate(iso).getTime() + days * DAY_MS));
+}
+
+/** Premier jour du mois contenant la date (ISO "YYYY-MM-01"). */
+export function getMonthStart(date: Date = new Date()): string {
+  return toISODate(new Date(date.getFullYear(), date.getMonth(), 1));
+}
+
+/** Décale un mois à partir d'un "YYYY-MM-01". */
+export function shiftMonth(monthStart: string, months: number): string {
+  const d = fromISODate(monthStart);
+  return getMonthStart(new Date(d.getFullYear(), d.getMonth() + months, 1));
+}
+
+/**
+ * Grille calendaire d'un mois : semaines complètes (lundi→dimanche) couvrant
+ * tout le mois. Chaque date sait si elle appartient au mois courant.
+ */
+export function monthGrid(
+  monthStart: string,
+): { iso: string; inMonth: boolean }[] {
+  const first = fromISODate(monthStart);
+  const month = first.getMonth();
+  const gridStart = fromISODate(getMonday(first));
+  // 6 semaines couvrent tous les cas de figure.
+  return Array.from({ length: 42 }, (_, i) => {
+    const d = new Date(gridStart.getTime() + i * DAY_MS);
+    return { iso: toISODate(d), inMonth: d.getMonth() === month };
+  });
+}
+
+/** Bornes [début, fin] ISO d'une vue, pour charger les shifts. */
+export function viewRange(
+  view: PlanningView,
+  anchor: string,
+): { from: string; to: string; label: string } {
+  if (view === "day") {
+    return {
+      from: anchor,
+      to: anchor,
+      label: fromISODate(anchor).toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    };
+  }
+  if (view === "month") {
+    const grid = monthGrid(anchor);
+    return {
+      from: grid[0].iso,
+      to: grid[grid.length - 1].iso,
+      label: fromISODate(anchor).toLocaleDateString("fr-FR", {
+        month: "long",
+        year: "numeric",
+      }),
+    };
+  }
+  // week
+  const days = weekDates(anchor);
+  return { from: days[0], to: days[6], label: formatWeekRange(anchor) };
+}
