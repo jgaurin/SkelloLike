@@ -43,6 +43,13 @@ export type ShiftDraft = {
 
 const NONE = "__none__";
 
+/** Formate une durée en heures décimales -> "7h" / "7h30". */
+function formatDuration(hours: number): string {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return m === 0 ? `${h}h` : `${h}h${String(m).padStart(2, "0")}`;
+}
+
 export function ShiftDialog({
   open,
   onOpenChange,
@@ -128,102 +135,116 @@ export function ShiftDialog({
             </div>
           )}
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="employee_id">Employé</Label>
-              <Select
-                name="employee_id"
-                defaultValue={draft.employee_id ?? NONE}
-              >
-                <SelectTrigger id="employee_id">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Non assigné</SelectItem>
-                  {employees.map((e) => (
-                    <SelectItem key={e.id} value={e.id}>
-                      {e.first_name} {e.last_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-5 py-4">
+            {/* Section 1 — Affectation */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="employee_id">Employé</Label>
+                <Select
+                  name="employee_id"
+                  defaultValue={draft.employee_id ?? NONE}
+                >
+                  <SelectTrigger id="employee_id">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Non assigné</SelectItem>
+                    {employees.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.first_name} {e.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="space-y-1.5">
                 <Label htmlFor="position_id">Poste</Label>
+                <Select
+                  name="position_id"
+                  defaultValue={draft.position_id ?? NONE}
+                >
+                  <SelectTrigger id="position_id">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>Aucun</SelectItem>
+                    {positions.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        <span className="flex items-center gap-2">
+                          <span
+                            className="size-2.5 rounded-full"
+                            style={{ backgroundColor: p.color }}
+                          />
+                          {p.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <Link
                   href="/parametres/postes"
-                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
                 >
                   <Settings className="size-3" />
                   Gérer les postes
                 </Link>
               </div>
-              <Select
-                name="position_id"
-                defaultValue={draft.position_id ?? NONE}
-              >
-                <SelectTrigger id="position_id">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>Aucun</SelectItem>
-                  {positions.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="start_time">Début</Label>
-                <Input
-                  id="start_time"
-                  name="start_time"
-                  type="time"
-                  value={start}
-                  onChange={(e) => setStart(e.target.value)}
-                  required
-                />
+            {/* Section 2 — Horaires (encadré pour regrouper visuellement) */}
+            <div className="space-y-3 rounded-lg border bg-muted/30 p-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="start_time">Début</Label>
+                  <Input
+                    id="start_time"
+                    name="start_time"
+                    type="time"
+                    value={start}
+                    onChange={(e) => setStart(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="end_time">Fin</Label>
+                  <Input
+                    id="end_time"
+                    name="end_time"
+                    type="time"
+                    value={end}
+                    onChange={(e) => setEnd(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="break_minutes">Pause</Label>
+                  <Input
+                    id="break_minutes"
+                    name="break_minutes"
+                    type="number"
+                    min="0"
+                    step="5"
+                    defaultValue={draft.break_minutes || 0}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="end_time">Fin</Label>
-                <Input
-                  id="end_time"
-                  name="end_time"
-                  type="time"
-                  value={end}
-                  onChange={(e) => setEnd(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="break_minutes">Pause (min)</Label>
-                <Input
-                  id="break_minutes"
-                  name="break_minutes"
-                  type="number"
-                  min="0"
-                  step="5"
-                  defaultValue={draft.break_minutes || 0}
-                />
+              <div className="flex items-center justify-between border-t pt-2 text-sm">
+                <span className="text-muted-foreground">Durée travaillée</span>
+                <span className="font-semibold text-primary">
+                  {formatDuration(hours)}
+                </span>
               </div>
             </div>
 
-            <p className="text-xs text-muted-foreground">
-              Durée : {hours.toFixed(2).replace(".", "h").replace("h00", "h")}
-            </p>
-
-            <div className="space-y-2">
-              <Label htmlFor="note_manager">Note (interne)</Label>
+            {/* Section 3 — Note */}
+            <div className="space-y-1.5">
+              <Label htmlFor="note_manager">Note interne</Label>
               <Textarea
                 id="note_manager"
                 name="note_manager"
                 rows={2}
+                placeholder="Visible par les managers uniquement"
                 defaultValue={draft.note_manager ?? ""}
               />
             </div>
