@@ -62,39 +62,23 @@ export function ShiftPill({
       className={cn(
         "relative block w-full overflow-hidden rounded-md text-left font-medium text-white transition",
         compact ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-1 text-xs",
+        // Liseré ambre à gauche quand il y a une alerte — simple et lisible.
+        alert && "border-l-4 border-amber-400",
         draggable && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40",
       )}
       style={{ backgroundColor: color }}
     >
-      {/* Liseré d'alerte : barre ambre à gauche + voile diagonal subtil. */}
-      {alert && (
-        <>
-          <span className="absolute inset-y-0 left-0 w-1 bg-amber-400" />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute inset-0 opacity-25"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(45deg, rgba(251,191,36,0.9) 0 6px, transparent 6px 12px)",
-            }}
-          />
-        </>
-      )}
-      <span className={cn("relative flex items-center gap-1", alert && "pl-1.5")}>
+      <span className="flex items-center gap-1">
         <span className="truncate">
           {shift.start_time} – {shift.end_time}
         </span>
         {alert && (
-          <span className="ml-auto flex size-4 shrink-0 items-center justify-center rounded-full bg-amber-400 text-amber-950">
-            <AlertTriangle className="size-2.5" />
-          </span>
+          <AlertTriangle className="ml-auto size-3 shrink-0 text-amber-300" />
         )}
       </span>
       {!compact && positionName && (
-        <span className="relative block truncate opacity-90">
-          {positionName}
-        </span>
+        <span className="block truncate opacity-90">{positionName}</span>
       )}
     </button>
   );

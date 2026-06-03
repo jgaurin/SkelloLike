@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 import { createShift, updateShift, deleteShift } from "./actions";
@@ -46,6 +46,7 @@ export function ShiftDialog({
   open,
   onOpenChange,
   draft,
+  alertMessages = [],
   locationId,
   weekStart,
   employees,
@@ -54,6 +55,7 @@ export function ShiftDialog({
   open: boolean;
   onOpenChange: (o: boolean) => void;
   draft: ShiftDraft | null;
+  alertMessages?: string[];
   locationId: string;
   weekStart: string;
   employees: Employee[];
@@ -109,6 +111,21 @@ export function ShiftDialog({
               )}
             </DialogDescription>
           </DialogHeader>
+
+          {alertMessages.length > 0 && (
+            <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+              <p className="flex items-center gap-2 font-medium">
+                <AlertTriangle className="size-4" />
+                {alertMessages.length} alerte
+                {alertMessages.length > 1 ? "s" : ""}
+              </p>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs">
+                {alertMessages.map((m, i) => (
+                  <li key={i}>{m}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">

@@ -186,35 +186,44 @@ export function PlanningBoard({
         0,
       );
 
-  // Nom d'employé + icône d'alerte (détails au survol).
+  // Nom d'employé + icône d'alerte (détails au survol du nom OU de l'icône).
   const renderEmployeeName = (emp: Employee) => {
     const msgs = employeeAlertMessages.get(emp.id);
+    const nameRow = (
+      <span
+        className={cn(
+          "flex min-w-0 items-center gap-1.5",
+          msgs && "cursor-help",
+        )}
+      >
+        {msgs && (
+          <AlertTriangle className="size-3.5 shrink-0 text-amber-500" />
+        )}
+        <span className="truncate text-sm font-medium">
+          {emp.first_name} {emp.last_name}
+        </span>
+      </span>
+    );
+
     return (
       <div className="flex items-center justify-between gap-1 p-3">
-        <span className="flex min-w-0 items-center gap-1.5">
-          {msgs && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="shrink-0 cursor-help">
-                  <AlertTriangle className="size-3.5 text-amber-500" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="right" className="max-w-xs">
-                <p className="mb-1 font-medium">
-                  {msgs.length} alerte{msgs.length > 1 ? "s" : ""}
-                </p>
-                <ul className="list-disc space-y-0.5 pl-4 text-xs">
-                  {msgs.map((m, i) => (
-                    <li key={i}>{m}</li>
-                  ))}
-                </ul>
-              </TooltipContent>
-            </Tooltip>
-          )}
-          <span className="truncate text-sm font-medium">
-            {emp.first_name} {emp.last_name}
-          </span>
-        </span>
+        {msgs ? (
+          <Tooltip>
+            <TooltipTrigger asChild>{nameRow}</TooltipTrigger>
+            <TooltipContent side="right" className="max-w-xs">
+              <p className="mb-1 font-medium">
+                {msgs.length} alerte{msgs.length > 1 ? "s" : ""}
+              </p>
+              <ul className="list-disc space-y-0.5 pl-4 text-xs">
+                {msgs.map((m, i) => (
+                  <li key={i}>{m}</li>
+                ))}
+              </ul>
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          nameRow
+        )}
         <span className="ml-2 shrink-0 text-xs text-muted-foreground">
           {totalFor(emp.id).toFixed(0)}h
         </span>
@@ -493,6 +502,11 @@ export function PlanningBoard({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         draft={draft}
+        alertMessages={
+          draft?.id
+            ? (alerts.byShift.get(draft.id) ?? []).map((a) => a.message)
+            : []
+        }
         locationId={locationId}
         weekStart={weekStart}
         employees={employees}
