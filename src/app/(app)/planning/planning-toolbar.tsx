@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { ChevronLeft, ChevronRight, Send, Briefcase } from "lucide-react";
+import { ChevronLeft, ChevronRight, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { publishSchedule } from "./actions";
@@ -164,14 +163,6 @@ export function PlanningToolbar({
           <Badge variant="outline" className="text-muted-foreground">
             Brouillon
           </Badge>
-        )}
-        {canManage && (
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/parametres/postes">
-              <Briefcase className="size-4" />
-              Postes
-            </Link>
-          </Button>
         )}
         {canManage && (
           <Button size="sm" onClick={onPublish} disabled={isPending}>

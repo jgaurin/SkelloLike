@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Trash2, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { Trash2, AlertTriangle, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 import { createShift, updateShift, deleteShift } from "./actions";
@@ -149,7 +150,16 @@ export function ShiftDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="position_id">Poste</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="position_id">Poste</Label>
+                <Link
+                  href="/parametres/postes"
+                  className="flex items-center gap-1 text-xs text-primary hover:underline"
+                >
+                  <Settings className="size-3" />
+                  Gérer les postes
+                </Link>
+              </div>
               <Select
                 name="position_id"
                 defaultValue={draft.position_id ?? NONE}
