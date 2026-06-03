@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Briefcase, Building2, Coffee, ChevronRight } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  Coffee,
+  CalendarPlus,
+  ChevronRight,
+} from "lucide-react";
 
 import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
@@ -23,6 +29,12 @@ const settings = [
     icon: Coffee,
     title: "Pauses automatiques",
     description: "Pré-remplissage des pauses selon la durée des shifts.",
+  },
+  {
+    href: "/parametres/conges",
+    icon: CalendarPlus,
+    title: "Acquisition des congés",
+    description: "Taux d'acquisition mensuel par type (CP, RTT…).",
   },
   {
     href: "/etablissements",

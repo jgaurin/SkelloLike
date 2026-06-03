@@ -10,14 +10,14 @@ export type BalanceResult = { ok: boolean; error?: string };
 const ADMIN_ROLES = ["org_owner", "org_admin", "location_manager"];
 
 /**
- * Ajuste manuellement le solde acquis (ou l'ajustement) d'un employé pour un
- * type d'absence et une année. Crée la ligne si elle n'existe pas (upsert).
+ * Met à jour l'ajustement manuel (correction) du solde d'un employé pour un
+ * type d'absence et une année. L'acquis est calculé automatiquement ailleurs.
+ * Crée la ligne si elle n'existe pas (upsert).
  */
 export async function upsertLeaveBalance(
   employeeId: string,
   typeId: string,
   year: number,
-  acquired: number,
   adjusted: number,
 ): Promise<BalanceResult> {
   const ctx = await getAppContext();
@@ -43,7 +43,6 @@ export async function upsertLeaveBalance(
       employee_id: employeeId,
       type_id: typeId,
       year,
-      acquired: Math.max(0, acquired),
       adjusted,
     },
     { onConflict: "employee_id,type_id,year" },

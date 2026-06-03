@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
+import { computeAccrued } from "@/lib/leave-accrual";
 import { BalancesTable, type BalanceRow } from "./balances-table";
 
 const ADMIN_ROLES = ["org_owner", "org_admin", "location_manager"];
@@ -33,18 +34,21 @@ export default async function CompteursPage({
     await Promise.all([
       supabase
         .from("employees")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, hire_date")
         .eq("status", "active")
         .order("last_name"),
-      // Seuls les types qui décomptent un solde (CP, RTT…).
+      // Seuls les types qui décomptent un solde (CP, RTT…), avec leurs règles d'acquisition.
       supabase
         .from("absence_types")
-        .select("id, name, color")
+        .select(
+          "id, name, color, monthly_accrual, annual_cap, period_start_month",
+        )
         .eq("affects_counter", true)
         .order("name"),
+      // Le solde stocke désormais uniquement l'ajustement manuel (correction).
       supabase
         .from("leave_balances")
-        .select("employee_id, type_id, acquired, adjusted")
+        .select("employee_id, type_id, adjusted")
         .eq("year", year),
       // Absences validées de l'année pour calculer le "pris".
       supabase
@@ -64,20 +68,32 @@ export default async function CompteursPage({
     takenMap.set(key, (takenMap.get(key) ?? 0) + days);
   }
 
-  // Acquis/ajusté saisis.
-  const balMap = new Map<string, { acquired: number; adjusted: number }>();
+  // Ajustement manuel (correction) par employé+type.
+  const adjustMap = new Map<string, number>();
   for (const b of balances ?? []) {
-    balMap.set(`${b.employee_id}|${b.type_id}`, {
-      acquired: Number(b.acquired),
-      adjusted: Number(b.adjusted),
-    });
+    adjustMap.set(`${b.employee_id}|${b.type_id}`, Number(b.adjusted));
   }
+
+  // Date de référence du calcul : 31 déc. pour une année passée, sinon aujourd'hui.
+  const now = new Date();
+  const ref =
+    year < now.getFullYear() ? new Date(year, 11, 31) : now;
 
   const rows: BalanceRow[] = [];
   for (const emp of employees ?? []) {
     for (const t of types ?? []) {
       const key = `${emp.id}|${t.id}`;
-      const bal = balMap.get(key) ?? { acquired: 0, adjusted: 0 };
+      // Acquis = calcul automatique selon la règle du type et la date d'entrée.
+      const acquired = computeAccrued(
+        {
+          monthlyAccrual: Number(t.monthly_accrual),
+          annualCap: Number(t.annual_cap),
+          periodStartMonth: t.period_start_month,
+        },
+        emp.hire_date,
+        ref,
+      );
+      const adjusted = adjustMap.get(key) ?? 0;
       const taken = takenMap.get(key) ?? 0;
       rows.push({
         employeeId: emp.id,
@@ -85,10 +101,10 @@ export default async function CompteursPage({
         typeId: t.id,
         type: t.name,
         typeColor: t.color,
-        acquired: bal.acquired,
-        adjusted: bal.adjusted,
+        acquired,
+        adjusted,
         taken,
-        remaining: bal.acquired + bal.adjusted - taken,
+        remaining: acquired + adjusted - taken,
       });
     }
   }

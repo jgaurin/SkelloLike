@@ -46,7 +46,6 @@ function EditDialog({
   year: number;
   onClose: () => void;
 }) {
-  const [acquired, setAcquired] = useState(row.acquired);
   const [adjusted, setAdjusted] = useState(row.adjusted);
   const [isPending, startTransition] = useTransition();
 
@@ -56,7 +55,6 @@ function EditDialog({
         row.employeeId,
         row.typeId,
         year,
-        acquired,
         adjusted,
       );
       if (res.ok) {
@@ -68,7 +66,7 @@ function EditDialog({
     });
   };
 
-  const remaining = acquired + adjusted - row.taken;
+  const remaining = row.acquired + adjusted - row.taken;
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -81,17 +79,11 @@ function EditDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="acquired">Jours acquis</Label>
-            <Input
-              id="acquired"
-              type="number"
-              min="0"
-              step="0.5"
-              value={acquired}
-              onChange={(e) => setAcquired(Number(e.target.value) || 0)}
-            />
+          <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
+            <span className="text-muted-foreground">Acquis (automatique)</span>
+            <span className="font-medium">{row.acquired} j</span>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="adjusted">Ajustement (+/−)</Label>
             <Input
@@ -102,13 +94,14 @@ function EditDialog({
               onChange={(e) => setAdjusted(Number(e.target.value) || 0)}
             />
             <p className="text-xs text-muted-foreground">
-              Correction manuelle (report, régularisation…).
+              Correction manuelle (report de l&apos;an dernier, régularisation…).
+              L&apos;acquis se calcule automatiquement selon le contrat.
             </p>
           </div>
 
           <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
             <span className="text-muted-foreground">
-              Pris : {row.taken} · Restant après modif.
+              Pris : {row.taken} · Restant
             </span>
             <span className="font-semibold text-primary">{remaining} j</span>
           </div>

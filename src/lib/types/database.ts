@@ -101,27 +101,36 @@ export type Database = {
       absence_types: {
         Row: {
           affects_counter: boolean
+          annual_cap: number
           color: string
           created_at: string
           id: string
+          monthly_accrual: number
           name: string
           org_id: string
+          period_start_month: number
         }
         Insert: {
           affects_counter?: boolean
+          annual_cap?: number
           color?: string
           created_at?: string
           id?: string
+          monthly_accrual?: number
           name: string
           org_id: string
+          period_start_month?: number
         }
         Update: {
           affects_counter?: boolean
+          annual_cap?: number
           color?: string
           created_at?: string
           id?: string
+          monthly_accrual?: number
           name?: string
           org_id?: string
+          period_start_month?: number
         }
         Relationships: [
           {
