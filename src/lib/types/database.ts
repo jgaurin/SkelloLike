@@ -361,6 +361,7 @@ export type Database = {
       locations: {
         Row: {
           address: string | null
+          break_rules: Json
           city: string | null
           color: string
           country: string
@@ -376,6 +377,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          break_rules?: Json
           city?: string | null
           color?: string
           country?: string
@@ -391,6 +393,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          break_rules?: Json
           city?: string | null
           color?: string
           country?: string
@@ -818,6 +821,10 @@ export type Database = {
       is_org_member: { Args: { target_org: string }; Returns: boolean }
       location_org_id: { Args: { loc: string }; Returns: string }
       schedule_org_id: { Args: { sched: string }; Returns: string }
+      seed_default_absence_types: {
+        Args: { target_org: string }
+        Returns: undefined
+      }
       user_org_ids: { Args: never; Returns: string[] }
     }
     Enums: {

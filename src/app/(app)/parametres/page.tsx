@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Briefcase, Building2, ChevronRight } from "lucide-react";
+import { Briefcase, Building2, Coffee, ChevronRight } from "lucide-react";
 
 import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
@@ -17,6 +17,12 @@ const settings = [
     icon: Briefcase,
     title: "Postes & qualifications",
     description: "Gérez les postes (Serveur, Cuisinier…) et leurs couleurs.",
+  },
+  {
+    href: "/parametres/pauses",
+    icon: Coffee,
+    title: "Pauses automatiques",
+    description: "Pré-remplissage des pauses selon la durée des shifts.",
   },
   {
     href: "/etablissements",

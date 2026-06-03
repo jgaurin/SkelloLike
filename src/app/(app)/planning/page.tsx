@@ -15,6 +15,7 @@ import {
   type PlanningView,
 } from "@/lib/week";
 import { PlanningBoard } from "./planning-board";
+import { parseBreakRules } from "@/lib/breaks";
 
 const MANAGER_ROLES = [
   "org_owner",
@@ -37,7 +38,7 @@ export default async function PlanningPage({
 
   const { data: locations } = await supabase
     .from("locations")
-    .select("id, name")
+    .select("id, name, break_rules")
     .order("created_at", { ascending: true });
 
   if (!locations?.length) {
@@ -55,8 +56,10 @@ export default async function PlanningPage({
     );
   }
 
-  const locationId =
-    locations.find((l) => l.id === params.site)?.id ?? locations[0].id;
+  const selectedLocation =
+    locations.find((l) => l.id === params.site) ?? locations[0];
+  const locationId = selectedLocation.id;
+  const breakRules = parseBreakRules(selectedLocation.break_rules);
 
   // Ancre normalisée selon la vue.
   const baseDate = params.date ? fromISODate(params.date) : new Date();
@@ -188,6 +191,7 @@ export default async function PlanningPage({
         employeePositions={Array.from(employeePositions.entries()).map(
           ([id, set]) => [id, Array.from(set)] as [string, string[]],
         )}
+        breakRules={breakRules}
         published={schedule?.status === "published"}
         canManage={canManage}
       />

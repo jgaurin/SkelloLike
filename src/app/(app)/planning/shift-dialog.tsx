@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { createShift, updateShift, deleteShift } from "./actions";
 import { createPositionQuick } from "@/app/(app)/parametres/postes/actions";
 import { shiftHours } from "@/lib/week";
+import { autoBreakMinutes, type BreakRule } from "@/lib/breaks";
 import { PRESET_COLORS } from "@/lib/colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +62,7 @@ export function ShiftDialog({
   weekStart,
   employees,
   positions,
+  breakRules,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -70,10 +72,33 @@ export function ShiftDialog({
   weekStart: string;
   employees: Employee[];
   positions: Position[];
+  breakRules: BreakRule[];
 }) {
   const [isPending, startTransition] = useTransition();
   const [start, setStart] = useState(draft?.start_time ?? "09:00");
   const [end, setEnd] = useState(draft?.end_time ?? "17:00");
+
+  // Pause : contrôlée, recalculée auto quand on change les heures.
+  // En création, on part de la pause auto ; en édition, on garde la valeur existante.
+  const [breakMin, setBreakMin] = useState<number>(
+    draft?.id
+      ? (draft?.break_minutes ?? 0)
+      : autoBreakMinutes(
+          draft?.start_time ?? "09:00",
+          draft?.end_time ?? "17:00",
+          breakRules,
+        ),
+  );
+  // Tant que l'utilisateur n'a pas édité la pause à la main, on la garde auto.
+  const [breakTouched, setBreakTouched] = useState(false);
+
+  const applyTimes = (s: string, e: string) => {
+    setStart(s);
+    setEnd(e);
+    if (!breakTouched) {
+      setBreakMin(autoBreakMinutes(s, e, breakRules));
+    }
+  };
 
   // Liste locale des postes (pour ajouter un poste créé à la volée).
   const [posList, setPosList] = useState<Position[]>(positions);
@@ -134,7 +159,7 @@ export function ShiftDialog({
     });
   };
 
-  const hours = shiftHours(start, end, 0);
+  const hours = shiftHours(start, end, breakMin);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -293,7 +318,7 @@ export function ShiftDialog({
                     name="start_time"
                     type="time"
                     value={start}
-                    onChange={(e) => setStart(e.target.value)}
+                    onChange={(e) => applyTimes(e.target.value, end)}
                     required
                   />
                 </div>
@@ -304,19 +329,23 @@ export function ShiftDialog({
                     name="end_time"
                     type="time"
                     value={end}
-                    onChange={(e) => setEnd(e.target.value)}
+                    onChange={(e) => applyTimes(start, e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="break_minutes">Pause</Label>
+                  <Label htmlFor="break_minutes">Pause (min)</Label>
                   <Input
                     id="break_minutes"
                     name="break_minutes"
                     type="number"
                     min="0"
                     step="5"
-                    defaultValue={draft.break_minutes || 0}
+                    value={breakMin}
+                    onChange={(e) => {
+                      setBreakTouched(true);
+                      setBreakMin(Number(e.target.value) || 0);
+                    }}
                   />
                 </div>
               </div>
@@ -325,6 +354,11 @@ export function ShiftDialog({
                 <span className="font-semibold text-primary">
                   {formatDuration(hours)}
                 </span>
+                {!breakTouched && breakMin > 0 && (
+                  <span className="ml-auto text-xs text-muted-foreground">
+                    pause auto : {breakMin} min
+                  </span>
+                )}
               </div>
             </div>
 

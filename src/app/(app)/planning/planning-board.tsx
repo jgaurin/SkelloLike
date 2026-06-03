@@ -8,6 +8,7 @@ import { PlanningToolbar } from "./planning-toolbar";
 import { ShiftPill } from "./shift-pill";
 import { moveShift } from "./actions";
 import { computeAlerts } from "@/lib/planning-alerts";
+import type { BreakRule } from "@/lib/breaks";
 import {
   ShiftDialog,
   type ShiftDraft,
@@ -57,6 +58,7 @@ export function PlanningBoard({
   absences,
   contractHours,
   employeePositions,
+  breakRules,
   published,
   canManage,
 }: {
@@ -73,6 +75,7 @@ export function PlanningBoard({
   absences: { employee_id: string; date: string; name: string; color: string }[];
   contractHours: [string, number][];
   employeePositions: [string, string[]][];
+  breakRules: BreakRule[];
   published: boolean;
   canManage: boolean;
 }) {
@@ -536,6 +539,7 @@ export function PlanningBoard({
         weekStart={weekStart}
         employees={employees}
         positions={positions}
+        breakRules={breakRules}
       />
     </div>
   );
