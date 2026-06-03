@@ -1,5 +1,7 @@
 "use client";
 
+import { AlertTriangle } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 export type ShiftPillData = {
@@ -25,6 +27,8 @@ export function ShiftPill({
   draggable,
   dragging,
   compact,
+  alert,
+  alertTitle,
   onClick,
   onDragStart,
   onDragEnd,
@@ -35,6 +39,8 @@ export function ShiftPill({
   draggable: boolean;
   dragging: boolean;
   compact?: boolean;
+  alert?: boolean;
+  alertTitle?: string;
   onClick: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -52,15 +58,18 @@ export function ShiftPill({
         e.stopPropagation();
         onClick();
       }}
+      title={alertTitle}
       className={cn(
         "block w-full truncate rounded-md text-left font-medium text-white transition",
         compact ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-1 text-xs",
         draggable && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40",
+        alert && "ring-2 ring-amber-400 ring-offset-1",
       )}
       style={{ backgroundColor: color }}
     >
-      <span>
+      <span className="flex items-center gap-1">
+        {alert && <AlertTriangle className="size-3 shrink-0" />}
         {shift.start_time} – {shift.end_time}
       </span>
       {!compact && positionName && (

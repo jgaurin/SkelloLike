@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 import { PlanningToolbar } from "./planning-toolbar";
 import { ShiftPill } from "./shift-pill";
 import { moveShift } from "./actions";
+import { computeAlerts } from "@/lib/planning-alerts";
 import {
   ShiftDialog,
   type ShiftDraft,
@@ -48,6 +49,8 @@ export function PlanningBoard({
   employees,
   positions,
   shifts,
+  contractHours,
+  employeePositions,
   published,
   canManage,
 }: {
@@ -61,6 +64,8 @@ export function PlanningBoard({
   employees: Employee[];
   positions: Position[];
   shifts: Shift[];
+  contractHours: [string, number][];
+  employeePositions: [string, string[]][];
   published: boolean;
   canManage: boolean;
 }) {
@@ -75,6 +80,20 @@ export function PlanningBoard({
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   const posById = new Map(positions.map((p) => [p.id, p]));
+
+  // Alertes recalculées en direct (drag & drop) sur les shifts de la semaine.
+  const alerts = useMemo(() => {
+    const ctx = {
+      contractHours: new Map(contractHours),
+      employeePositions: new Map(
+        employeePositions.map(([id, arr]) => [id, new Set(arr)]),
+      ),
+    };
+    // Les alertes hebdo se calculent sur la semaine de l'ancre.
+    const weekSet = new Set(days);
+    const weekShifts = localShifts.filter((s) => weekSet.has(s.shift_date));
+    return computeAlerts(weekShifts, ctx);
+  }, [localShifts, contractHours, employeePositions, days]);
 
   // Index shifts par "employeeId|date".
   const cellShifts = new Map<string, Shift[]>();
@@ -146,6 +165,7 @@ export function PlanningBoard({
       <>
         {cell.map((s) => {
           const pos = s.position_id ? posById.get(s.position_id) : null;
+          const shiftAlerts = alerts.byShift.get(s.id);
           return (
             <ShiftPill
               key={s.id}
@@ -154,6 +174,8 @@ export function PlanningBoard({
               positionName={pos?.name}
               draggable={canManage}
               dragging={draggingId === s.id}
+              alert={!!shiftAlerts}
+              alertTitle={shiftAlerts?.map((a) => a.message).join("\n")}
               onClick={() => openEdit(s)}
               onDragStart={() => setDraggingId(s.id)}
               onDragEnd={() => {
@@ -235,9 +257,17 @@ export function PlanningBoard({
             key={emp.id}
             className="grid grid-cols-[200px_repeat(7,1fr)] border-b last:border-b-0"
           >
-            <div className="flex items-center justify-between p-3">
-              <span className="truncate text-sm font-medium">
-                {emp.first_name} {emp.last_name}
+            <div className="flex items-center justify-between gap-1 p-3">
+              <span className="flex min-w-0 items-center gap-1.5">
+                {alerts.byEmployee.get(emp.id) && (
+                  <AlertTriangle
+                    className="size-3.5 shrink-0 text-amber-500"
+                    aria-label="Alertes"
+                  />
+                )}
+                <span className="truncate text-sm font-medium">
+                  {emp.first_name} {emp.last_name}
+                </span>
               </span>
               <span className="ml-2 shrink-0 text-xs text-muted-foreground">
                 {totalFor(emp.id).toFixed(0)}h
@@ -399,6 +429,28 @@ export function PlanningBoard({
         published={published}
         canManage={canManage}
       />
+
+      {alerts.total > 0 && view !== "month" && (
+        <div className="border-b bg-amber-50 px-6 py-2 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+          <span className="flex items-center gap-2 font-medium">
+            <AlertTriangle className="size-4" />
+            {alerts.total} alerte{alerts.total > 1 ? "s" : ""} sur cette semaine
+          </span>
+          <ul className="mt-1 ml-6 list-disc space-y-0.5 text-xs">
+            {[...alerts.byEmployee.entries()].slice(0, 6).map(([empId, list]) => {
+              const emp = employees.find((e) => e.id === empId);
+              return list.map((a, i) => (
+                <li key={`${empId}-${i}`}>
+                  <span className="font-medium">
+                    {emp ? `${emp.first_name} ${emp.last_name}` : "Employé"}
+                  </span>{" "}
+                  : {a.message}
+                </li>
+              ));
+            })}
+          </ul>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-4">
         {view === "week" && renderWeek()}

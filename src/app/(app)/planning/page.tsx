@@ -69,15 +69,41 @@ export default async function PlanningPage({
 
   const range = viewRange(view, anchor);
 
-  // Employés actifs + postes + shifts sur la plage de la vue.
-  const [{ data: employees }, { data: positions }] = await Promise.all([
+  // Employés actifs + postes + contrats + postes occupables.
+  const [
+    { data: employees },
+    { data: positions },
+    { data: contracts },
+    { data: empPositions },
+  ] = await Promise.all([
     supabase
       .from("employees")
       .select("id, first_name, last_name")
       .eq("status", "active")
       .order("last_name"),
     supabase.from("positions").select("id, name, color").order("name"),
+    supabase
+      .from("contracts")
+      .select("employee_id, weekly_hours, start_date")
+      .order("start_date", { ascending: false }),
+    supabase.from("employee_positions").select("employee_id, position_id"),
   ]);
+
+  // Heures contractuelles : on garde le contrat le plus récent par employé.
+  const contractHours = new Map<string, number>();
+  for (const c of contracts ?? []) {
+    if (!contractHours.has(c.employee_id)) {
+      contractHours.set(c.employee_id, Number(c.weekly_hours));
+    }
+  }
+
+  // Postes occupables par employé.
+  const employeePositions = new Map<string, Set<string>>();
+  for (const ep of empPositions ?? []) {
+    const set = employeePositions.get(ep.employee_id) ?? new Set<string>();
+    set.add(ep.position_id);
+    employeePositions.set(ep.employee_id, set);
+  }
 
   // Les shifts sont chargés par plage de dates (indépendamment du schedule),
   // pour couvrir un mois qui chevauche plusieurs semaines.
@@ -125,6 +151,10 @@ export default async function PlanningPage({
         employees={employees ?? []}
         positions={positions ?? []}
         shifts={shifts}
+        contractHours={Array.from(contractHours.entries())}
+        employeePositions={Array.from(employeePositions.entries()).map(
+          ([id, set]) => [id, Array.from(set)] as [string, string[]],
+        )}
         published={schedule?.status === "published"}
         canManage={canManage}
       />
