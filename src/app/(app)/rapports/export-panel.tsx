@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { FileSpreadsheet, FileText, Clock } from "lucide-react";
+import { FileSpreadsheet, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -123,15 +123,6 @@ export function ExportPanel({ locations }: { locations: Location[] }) {
             <a href={href("csv")}>
               <FileText className="size-4" />
               Exporter en CSV
-            </a>
-          </Button>
-          <Button variant="ghost" asChild>
-            <a
-              href={`/api/export/hours?site=${site}&format=xlsx`}
-              className="text-muted-foreground"
-            >
-              <Clock className="size-4" />
-              Heures de la semaine
             </a>
           </Button>
         </div>

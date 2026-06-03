@@ -1,5 +1,4 @@
 import { type NextRequest, NextResponse } from "next/server";
-import * as XLSX from "xlsx";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
@@ -120,30 +119,161 @@ export async function GET(request: NextRequest) {
     monthEnd: end,
   });
 
-  // Construction des lignes "plates" avec colonnes dynamiques.
-  const flat = rows.map((r) => {
-    const obj: Record<string, string | number> = {
-      Nom: r.name,
-      "Jours travaillés": r.workedDays,
-      "Heures travaillées": r.workedHours,
-    };
-    for (const w of weeks) {
-      obj[`S${w} (heures supp)`] = r.overtimeByWeek[w] ?? 0;
-    }
-    obj["Heures supp (total)"] = r.overtimeTotal;
-    for (const t of absenceTypes) {
-      obj[t] = r.absencesByType[t] ?? 0;
-    }
-    return obj;
-  });
+  // ── Définition des colonnes, groupées par section ────────────────────────
+  // Chaque colonne : libellé, section (pour la couleur), accès à la valeur.
+  type Section = "id" | "work" | "overtime" | "absence";
+  type Col = {
+    header: string;
+    section: Section;
+    width: number;
+    value: (r: (typeof rows)[number]) => string | number;
+  };
+
+  const columns: Col[] = [
+    { header: "Nom", section: "id", width: 22, value: (r) => r.name },
+    {
+      header: "Jours\ntravaillés",
+      section: "work",
+      width: 11,
+      value: (r) => r.workedDays,
+    },
+    {
+      header: "Heures\ntravaillées",
+      section: "work",
+      width: 12,
+      value: (r) => r.workedHours,
+    },
+    ...weeks.map(
+      (w): Col => ({
+        header: `S${w}\nh. supp`,
+        section: "overtime",
+        width: 9,
+        value: (r) => r.overtimeByWeek[w] ?? 0,
+      }),
+    ),
+    {
+      header: "Total\nh. supp",
+      section: "overtime",
+      width: 10,
+      value: (r) => r.overtimeTotal,
+    },
+    ...absenceTypes.map(
+      (t): Col => ({
+        header: t,
+        section: "absence",
+        width: 14,
+        value: (r) => r.absencesByType[t] ?? 0,
+      }),
+    ),
+  ];
 
   const filenameBase = `prepaie_${location.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}_${label}`;
 
+  // ── Export Excel stylé (ExcelJS) ─────────────────────────────────────────
   if (format === "xlsx") {
-    const ws = XLSX.utils.json_to_sheet(flat);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Pré-paie");
-    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const { default: ExcelJS } = await import("exceljs");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Pré-paie", {
+      views: [{ state: "frozen", xSplit: 1, ySplit: 2 }],
+    });
+
+    // Couleurs par section (ARGB).
+    const sectionFill: Record<Section, string> = {
+      id: "FF334155", // ardoise foncée
+      work: "FF059669", // émeraude
+      overtime: "FFF59E0B", // ambre
+      absence: "FF6366F1", // indigo
+    };
+    const sectionLabel: Record<Section, string> = {
+      id: "",
+      work: "TRAVAIL",
+      overtime: "HEURES SUPP.",
+      absence: "ABSENCES (jours)",
+    };
+
+    ws.columns = columns.map((c) => ({ width: c.width }));
+
+    // Ligne 1 : bandeaux de section (fusionnés).
+    const sectionRow = ws.getRow(1);
+    sectionRow.height = 20;
+    let col = 1;
+    while (col <= columns.length) {
+      const sec = columns[col - 1].section;
+      let span = 1;
+      while (col + span <= columns.length && columns[col - 1 + span].section === sec)
+        span++;
+      const cell = sectionRow.getCell(col);
+      cell.value = sectionLabel[sec];
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: sectionFill[sec] },
+      };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      if (span > 1) ws.mergeCells(1, col, 1, col + span - 1);
+      col += span;
+    }
+
+    // Ligne 2 : en-têtes de colonnes.
+    const headerRow = ws.getRow(2);
+    headerRow.height = 30;
+    columns.forEach((c, i) => {
+      const cell = headerRow.getCell(i + 1);
+      cell.value = c.header;
+      cell.font = { bold: true, color: { argb: "FF1E293B" }, size: 10 };
+      cell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF1F5F9" },
+      };
+      cell.alignment = {
+        horizontal: c.section === "id" ? "left" : "center",
+        vertical: "middle",
+        wrapText: true,
+      };
+      cell.border = {
+        bottom: { style: "thin", color: { argb: "FFCBD5E1" } },
+        right: { style: "hair", color: { argb: "FFE2E8F0" } },
+      };
+    });
+
+    // Lignes de données (avec zébrage).
+    rows.forEach((r, idx) => {
+      const row = ws.getRow(idx + 3);
+      row.height = 18;
+      columns.forEach((c, i) => {
+        const cell = row.getCell(i + 1);
+        cell.value = c.value(r);
+        cell.alignment = {
+          horizontal: c.section === "id" ? "left" : "center",
+          vertical: "middle",
+        };
+        if (c.section === "id") cell.font = { bold: true, size: 10 };
+        else cell.font = { size: 10 };
+        if (idx % 2 === 1) {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "FFF8FAFC" },
+          };
+        }
+        cell.border = {
+          bottom: { style: "hair", color: { argb: "FFE2E8F0" } },
+          right: { style: "hair", color: { argb: "FFE2E8F0" } },
+        };
+        // Met en évidence les valeurs non nulles d'heures supp / absences.
+        if (
+          (c.section === "overtime" || c.section === "absence") &&
+          typeof cell.value === "number" &&
+          cell.value > 0
+        ) {
+          cell.font = { size: 10, bold: true, color: { argb: "FF0F172A" } };
+        }
+      });
+    });
+
+    const buf = await wb.xlsx.writeBuffer();
     return new NextResponse(buf, {
       headers: {
         "Content-Type":
@@ -153,14 +283,15 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const headers = Object.keys(flat[0] ?? { Nom: "" });
+  // ── Export CSV ───────────────────────────────────────────────────────────
+  const headers = columns.map((c) => c.header.replace(/\n/g, " "));
   const escape = (v: string | number) => {
     const s = String(v);
     return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const csv = [
     headers.join(";"),
-    ...flat.map((r) => headers.map((h) => escape(r[h])).join(";")),
+    ...rows.map((r) => columns.map((c) => escape(c.value(r))).join(";")),
   ].join("\r\n");
 
   return new NextResponse(`﻿${csv}`, {
