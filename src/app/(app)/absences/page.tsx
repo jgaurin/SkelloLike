@@ -1,8 +1,12 @@
+import Link from "next/link";
+import { CalendarClock } from "lucide-react";
+
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
 import { AbsenceFormDialog } from "./absence-form-dialog";
 import { AbsencesTable, type AbsenceRow } from "./absences-table";
+import { Button } from "@/components/ui/button";
 
 const MANAGER_ROLES = [
   "org_owner",
@@ -58,12 +62,20 @@ export default async function AbsencesPage() {
               Congés et absences de {ctx.orgName}.
             </p>
           </div>
-          {canManage && (
-            <AbsenceFormDialog
-              employees={employees ?? []}
-              types={types ?? []}
-            />
-          )}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/absences/compteurs">
+                <CalendarClock className="size-4" />
+                Compteurs
+              </Link>
+            </Button>
+            {canManage && (
+              <AbsenceFormDialog
+                employees={employees ?? []}
+                types={types ?? []}
+              />
+            )}
+          </div>
         </div>
 
         <AbsencesTable absences={rows} canManage={canManage} />
