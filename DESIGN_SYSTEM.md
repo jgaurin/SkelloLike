@@ -97,11 +97,67 @@ toujours l'émeraude.
 
 ---
 
-## 6. Checklist avant de livrer un écran
+## 6. Standards UX (OBLIGATOIRES sur chaque module)
+
+> Objectif : un vrai niveau Skello. **Penser à toutes les features pour une bonne
+> UX**, pas seulement au "happy path". Tout module qui manipule une liste d'entités
+> (employés, shifts, absences, contrats, postes, établissements, documents…) doit
+> respecter les standards ci-dessous.
+
+### 6.1 CRUD complet
+Chaque entité doit pouvoir être : **créée**, **lue/consultée**, **modifiée**,
+**supprimée** (dur) ET **archivée** (soft, quand pertinent — ex. employé avec
+historique). Ne jamais livrer un "créer" sans le "supprimer/modifier".
+
+### 6.2 Sélection multiple + actions de masse
+Toute liste/tableau doit proposer :
+- une **case à cocher par ligne** + une **case "tout sélectionner"** dans l'en-tête ;
+- une **barre d'actions groupées** qui apparaît quand ≥ 1 ligne est sélectionnée
+  (compteur "N sélectionné(s)" + boutons : supprimer, archiver, et autres actions
+  pertinentes selon l'entité — ex. changer de poste/équipe en masse).
+- Les actions de masse passent par un **Server Action** qui accepte un tableau d'IDs.
+
+### 6.3 Confirmation des actions destructives
+- Toute suppression/archivage (unitaire ou en masse) passe par un **dialog de
+  confirmation** (`AlertDialog`) rappelant le nombre d'éléments et leur nom si unitaire.
+- Texte clair : « Cette action est irréversible. » pour les suppressions dures.
+
+### 6.4 Feedback & états
+- **Toast** (`sonner`) après chaque action réussie ou échouée.
+- États **vide** (empty state illustré + CTA), **chargement** (skeleton), **erreur**.
+- Boutons en état **pending/disabled** pendant la soumission.
+- **Optimistic update** quand c'est pertinent (planning surtout).
+
+### 6.5 Recherche, filtres, tri
+- Barre de **recherche** (nom/email…) sur les listes de taille notable.
+- **Filtres** par statut/type/équipe/site selon l'entité.
+- **Tri** des colonnes clés. **Pagination** ou virtualisation au-delà de ~50 lignes.
+
+### 6.6 Navigation & accès
+- Aucune route morte : tout lien de la sidebar mène à une page (réelle ou `ComingSoon`).
+- **Permissions** vérifiées dans chaque Server Action ET masquage des boutons d'action
+  selon le rôle (un `employee` ne voit pas "Supprimer").
+- Fil d'Ariane / bouton retour sur les pages de détail.
+
+### 6.7 Détails qui font le pro
+- Raccourcis clavier sur les écrans denses (planning).
+- Import/Export CSV sur les grosses listes (employés, pointages…).
+- Dates formatées en `fr-FR`, pluriels gérés, libellés métier (pas l'enum brut).
+- Responsive réel + lisible en mode sombre.
+
+---
+
+## 7. Checklist avant de livrer un écran
 
 - [ ] La page vit dans `src/app/(app)/` et rend `<AppHeader>` + `<main className="p-6">`.
 - [ ] Aucune couleur en dur : uniquement des tokens sémantiques.
 - [ ] Composants shadcn réutilisés (pas de réimplémentation).
-- [ ] Icônes Lucide, textes en français.
+- [ ] Icônes Lucide, textes en français (libellés métier, pas l'enum brut).
+- [ ] **CRUD complet** (créer/lire/modifier/supprimer + archiver si pertinent).
+- [ ] **Sélection multiple + actions de masse** sur les listes/tableaux.
+- [ ] **Confirmation** (`AlertDialog`) sur toute action destructive.
+- [ ] **Toasts**, empty state, skeleton de chargement, boutons pending.
+- [ ] **Recherche/filtres/tri** sur les listes notables.
+- [ ] **Permissions** vérifiées (Server Action) + boutons masqués selon le rôle.
 - [ ] Responsive (grilles `sm: / lg:`), lisible en mode sombre.
 - [ ] `npx tsc --noEmit` passe.

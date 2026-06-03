@@ -7,6 +7,7 @@ import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
 import { EmployeeStatusBadge } from "@/components/employees/status-badge";
 import { EditEmployeeForm } from "./edit-employee-form";
+import { EmployeeActions } from "./employee-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,12 @@ export default async function EmployeeDetailPage({
   const { id } = await params;
   const ctx = await getAppContext();
   const supabase = await createClient();
+  const canManage = [
+    "org_owner",
+    "org_admin",
+    "location_manager",
+    "team_manager",
+  ].includes(ctx.role);
 
   const { data: employee } = await supabase
     .from("employees")
@@ -74,7 +81,7 @@ export default async function EmployeeDetailPage({
               {`${employee.first_name[0] ?? ""}${employee.last_name[0] ?? ""}`.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div>
+          <div className="flex-1">
             <h2 className="text-2xl font-semibold tracking-tight">
               {employee.first_name} {employee.last_name}
             </h2>
@@ -87,6 +94,12 @@ export default async function EmployeeDetailPage({
               )}
             </div>
           </div>
+          {canManage && (
+            <EmployeeActions
+              id={employee.id}
+              name={`${employee.first_name} ${employee.last_name}`}
+            />
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">

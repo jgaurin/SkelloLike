@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
@@ -139,4 +140,82 @@ export async function archiveEmployee(
 
   revalidatePath("/employes");
   return { success: true };
+}
+
+/**
+ * Supprime un seul employé puis redirige vers la liste (depuis la fiche).
+ */
+export async function deleteEmployeeAndRedirect(id: string): Promise<void> {
+  const ctx = await getAppContext();
+  if (!MANAGER_ROLES.includes(ctx.role)) {
+    throw new Error("Droits insuffisants.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("employees")
+    .delete()
+    .eq("id", id)
+    .eq("org_id", ctx.orgId);
+
+  if (error) {
+    throw new Error("Suppression impossible.");
+  }
+
+  revalidatePath("/employes");
+  redirect("/employes");
+}
+
+export type BulkResult = { ok: boolean; error?: string; count?: number };
+
+/**
+ * Supprime définitivement un ou plusieurs employés (action de masse).
+ * Suppression dure : les contrats/absences liés tombent en cascade (FK).
+ */
+export async function deleteEmployees(ids: string[]): Promise<BulkResult> {
+  const ctx = await getAppContext();
+  if (!MANAGER_ROLES.includes(ctx.role)) {
+    return { ok: false, error: "Vous n'avez pas les droits." };
+  }
+  if (!ids.length) return { ok: false, error: "Aucun employé sélectionné." };
+
+  const supabase = await createClient();
+  // .eq("org_id") en plus du RLS : défense en profondeur (jamais hors de son org).
+  const { error, count } = await supabase
+    .from("employees")
+    .delete({ count: "exact" })
+    .in("id", ids)
+    .eq("org_id", ctx.orgId);
+
+  if (error) {
+    return { ok: false, error: "Impossible de supprimer les employés." };
+  }
+
+  revalidatePath("/employes");
+  return { ok: true, count: count ?? ids.length };
+}
+
+/**
+ * Archive un ou plusieurs employés (action de masse, soft delete).
+ */
+export async function archiveEmployees(ids: string[]): Promise<BulkResult> {
+  const ctx = await getAppContext();
+  if (!MANAGER_ROLES.includes(ctx.role)) {
+    return { ok: false, error: "Vous n'avez pas les droits." };
+  }
+  if (!ids.length) return { ok: false, error: "Aucun employé sélectionné." };
+
+  const supabase = await createClient();
+  const { error, count } = await supabase
+    .from("employees")
+    .update({ status: "archived" }, { count: "exact" })
+    .in("id", ids)
+    .eq("org_id", ctx.orgId);
+
+  if (error) {
+    return { ok: false, error: "Impossible d'archiver les employés." };
+  }
+
+  revalidatePath("/employes");
+  return { ok: true, count: count ?? ids.length };
 }

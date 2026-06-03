@@ -24,6 +24,11 @@ propre design**. Jamais de code/assets/logo/contenus propriétaires copiés.
 - **Police = Poppins** (`--font-sans`, via `next/font/google` dans `layout.tsx`).
   Monospace = Geist Mono. Ne pas remettre Geist Sans en police d'UI.
 - **UI en français**, support du mode sombre via tokens.
+- **UX niveau Skello (OBLIGATOIRE) :** toute liste d'entités doit avoir CRUD complet
+  (créer/modifier/supprimer + archiver), **sélection multiple + actions de masse**,
+  **confirmation** sur les actions destructives, toasts, empty/loading states,
+  recherche/filtres/tri. Détails dans `DESIGN_SYSTEM.md` §6. Ne jamais livrer un
+  "créer" sans le "supprimer/modifier".
 - Couleurs *métier* (postes, absences, équipes, sites) = stockées en base, libres,
   appliquées en inline — seule exception aux tokens.
 

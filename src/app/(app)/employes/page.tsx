@@ -1,28 +1,22 @@
-import Link from "next/link";
 import { Users } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { AppHeader } from "@/components/layout/app-header";
-import { EmployeeStatusBadge } from "@/components/employees/status-badge";
 import { EmployeeFormDialog } from "./employee-form-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { EmployeesTable } from "./employees-table";
 
-function initials(first: string, last: string) {
-  return `${first[0] ?? ""}${last[0] ?? ""}`.toUpperCase();
-}
+const MANAGER_ROLES = [
+  "org_owner",
+  "org_admin",
+  "location_manager",
+  "team_manager",
+];
 
 export default async function EmployeesPage() {
   const ctx = await getAppContext();
   const supabase = await createClient();
+  const canManage = MANAGER_ROLES.includes(ctx.role);
 
   const { data: employees } = await supabase
     .from("employees")
@@ -46,54 +40,7 @@ export default async function EmployeesPage() {
         </div>
 
         {employees?.length ? (
-          <div className="rounded-lg border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Matricule</TableHead>
-                  <TableHead>Entrée</TableHead>
-                  <TableHead>Statut</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {employees.map((emp) => (
-                  <TableRow key={emp.id} className="cursor-pointer">
-                    <TableCell>
-                      <Link
-                        href={`/employes/${emp.id}`}
-                        className="flex items-center gap-3"
-                      >
-                        <Avatar className="size-8">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {initials(emp.first_name, emp.last_name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">
-                          {emp.first_name} {emp.last_name}
-                        </span>
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {emp.email ?? emp.phone ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {emp.employee_number ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {emp.hire_date
-                        ? new Date(emp.hire_date).toLocaleDateString("fr-FR")
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <EmployeeStatusBadge status={emp.status} />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <EmployeesTable employees={employees} canManage={canManage} />
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
             <Users className="size-10 text-muted-foreground/40" />
