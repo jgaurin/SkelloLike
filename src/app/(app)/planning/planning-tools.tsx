@@ -56,9 +56,12 @@ export function PlanningTools({
     startTransition(async () => {
       const res = await copyWeek(locationId, weekStart, target);
       if (res.ok) {
-        toast.success(`${res.count} shift(s) copié(s) sur la semaine suivante.`);
+        toast.success(
+          `${res.count} shift(s) copié(s) vers la semaine suivante.`,
+        );
         close();
-        router.push(`/planning?site=${locationId}&view=week&date=${target}`);
+        // On reste sur la semaine courante ; on rafraîchit juste les données.
+        router.refresh();
       } else {
         toast.error(res.error ?? "Erreur.");
       }
