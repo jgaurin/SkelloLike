@@ -2,7 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Wrench, Copy, Save, LayoutTemplate, Trash2 } from "lucide-react";
+import {
+  Wrench,
+  Copy,
+  Save,
+  LayoutTemplate,
+  Trash2,
+  FileSpreadsheet,
+  FileText,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -131,6 +139,27 @@ export function PlanningTools({
           >
             <LayoutTemplate className="size-4" />
             Appliquer un modèle
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-xs text-muted-foreground">
+            Exporter les heures
+          </DropdownMenuLabel>
+          <DropdownMenuItem asChild>
+            <a
+              href={`/api/export/hours?site=${locationId}&week=${weekStart}&format=xlsx`}
+            >
+              <FileSpreadsheet className="size-4" />
+              Excel (.xlsx)
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <a
+              href={`/api/export/hours?site=${locationId}&week=${weekStart}&format=csv`}
+            >
+              <FileText className="size-4" />
+              CSV
+            </a>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
