@@ -22,6 +22,11 @@ import {
   monthGrid,
   type PlanningView,
 } from "@/lib/week";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 type Location = { id: string; name: string };
@@ -95,6 +100,29 @@ export function PlanningBoard({
     return computeAlerts(weekShifts, ctx);
   }, [localShifts, contractHours, employeePositions, days]);
 
+  // Toutes les alertes d'un employé (niveau employé + niveau shift), pour le tooltip.
+  const employeeAlertMessages = useMemo(() => {
+    const map = new Map<string, string[]>();
+    const push = (empId: string, msg: string) => {
+      const arr = map.get(empId) ?? [];
+      arr.push(msg);
+      map.set(empId, arr);
+    };
+    for (const [empId, arr] of alerts.byEmployee) {
+      for (const a of arr) push(empId, a.message);
+    }
+    for (const [shiftId, arr] of alerts.byShift) {
+      const shift = localShifts.find((s) => s.id === shiftId);
+      if (!shift?.employee_id) continue;
+      const when = fromISODate(shift.shift_date).toLocaleDateString("fr-FR", {
+        weekday: "short",
+        day: "numeric",
+      });
+      for (const a of arr) push(shift.employee_id, `${when} : ${a.message}`);
+    }
+    return map;
+  }, [alerts, localShifts]);
+
   // Index shifts par "employeeId|date".
   const cellShifts = new Map<string, Shift[]>();
   for (const s of localShifts) {
@@ -157,6 +185,42 @@ export function PlanningBoard({
         (sum, s) => sum + shiftHours(s.start_time, s.end_time, s.break_minutes),
         0,
       );
+
+  // Nom d'employé + icône d'alerte (détails au survol).
+  const renderEmployeeName = (emp: Employee) => {
+    const msgs = employeeAlertMessages.get(emp.id);
+    return (
+      <div className="flex items-center justify-between gap-1 p-3">
+        <span className="flex min-w-0 items-center gap-1.5">
+          {msgs && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="shrink-0 cursor-help">
+                  <AlertTriangle className="size-3.5 text-amber-500" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p className="mb-1 font-medium">
+                  {msgs.length} alerte{msgs.length > 1 ? "s" : ""}
+                </p>
+                <ul className="list-disc space-y-0.5 pl-4 text-xs">
+                  {msgs.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          <span className="truncate text-sm font-medium">
+            {emp.first_name} {emp.last_name}
+          </span>
+        </span>
+        <span className="ml-2 shrink-0 text-xs text-muted-foreground">
+          {totalFor(emp.id).toFixed(0)}h
+        </span>
+      </div>
+    );
+  };
 
   // Rend le contenu d'une cellule (employé × jour) : shifts + bouton "+".
   const renderCellContent = (employeeId: string, date: string) => {
@@ -257,22 +321,7 @@ export function PlanningBoard({
             key={emp.id}
             className="grid grid-cols-[200px_repeat(7,1fr)] border-b last:border-b-0"
           >
-            <div className="flex items-center justify-between gap-1 p-3">
-              <span className="flex min-w-0 items-center gap-1.5">
-                {alerts.byEmployee.get(emp.id) && (
-                  <AlertTriangle
-                    className="size-3.5 shrink-0 text-amber-500"
-                    aria-label="Alertes"
-                  />
-                )}
-                <span className="truncate text-sm font-medium">
-                  {emp.first_name} {emp.last_name}
-                </span>
-              </span>
-              <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                {totalFor(emp.id).toFixed(0)}h
-              </span>
-            </div>
+            {renderEmployeeName(emp)}
             {days.map((d) => {
               const dp = dropProps(emp.id, d);
               return (
@@ -319,14 +368,7 @@ export function PlanningBoard({
               key={emp.id}
               className="grid grid-cols-[200px_1fr] border-b last:border-b-0"
             >
-              <div className="flex items-center justify-between p-3">
-                <span className="truncate text-sm font-medium">
-                  {emp.first_name} {emp.last_name}
-                </span>
-                <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-                  {totalFor(emp.id).toFixed(0)}h
-                </span>
-              </div>
+              {renderEmployeeName(emp)}
               <div
                 className={cn(
                   "group flex min-h-14 flex-wrap items-start gap-1 p-1.5 transition-colors",
@@ -431,24 +473,12 @@ export function PlanningBoard({
       />
 
       {alerts.total > 0 && view !== "month" && (
-        <div className="border-b bg-amber-50 px-6 py-2 text-sm text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
-          <span className="flex items-center gap-2 font-medium">
-            <AlertTriangle className="size-4" />
-            {alerts.total} alerte{alerts.total > 1 ? "s" : ""} sur cette semaine
+        <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-6 py-2 text-sm font-medium text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+          <AlertTriangle className="size-4" />
+          {alerts.total} alerte{alerts.total > 1 ? "s" : ""} sur cette semaine
+          <span className="font-normal text-amber-700 dark:text-amber-300/80">
+            — survolez l&apos;icône à côté d&apos;un employé pour le détail.
           </span>
-          <ul className="mt-1 ml-6 list-disc space-y-0.5 text-xs">
-            {[...alerts.byEmployee.entries()].slice(0, 6).map(([empId, list]) => {
-              const emp = employees.find((e) => e.id === empId);
-              return list.map((a, i) => (
-                <li key={`${empId}-${i}`}>
-                  <span className="font-medium">
-                    {emp ? `${emp.first_name} ${emp.last_name}` : "Employé"}
-                  </span>{" "}
-                  : {a.message}
-                </li>
-              ));
-            })}
-          </ul>
         </div>
       )}
 
