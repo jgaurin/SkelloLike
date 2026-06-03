@@ -490,11 +490,24 @@ Canaux : email, notification in-app, push mobile (phase 2), SMS (optionnel, via 
 
 ## 18. Interface utilisateur
 
+> 📐 **Charte détaillée : voir `DESIGN_SYSTEM.md`** (document de référence à respecter
+> pour tout nouvel écran). Section résumée ci-dessous.
+
 ### 18.1 Design system
-- Palette de couleurs : violet/mauve (référence Skello) + couleurs neutres
-- Typographie : Inter ou Geist
-- Composants : shadcn/ui (basé sur Radix UI) + Tailwind CSS
-- Mode sombre (dark mode) optionnel
+- **Couleur principale (main) : émeraude `#059669`.** On reproduit les *patterns de
+  layout* d'un SaaS de planning (sidebar de navigation, header sticky, grille de
+  planning, cards de stats) avec **notre propre charte couleur et notre propre code** —
+  jamais le violet/branding ni les assets propriétaires de Skello.
+- Toutes les couleurs passent par des **tokens sémantiques** (`--primary`, `--sidebar`,
+  `--muted-foreground`…) définis dans `src/app/globals.css`. Aucune couleur en dur dans
+  les composants. Pour rethémer l'app, on ne touche qu'à ce fichier.
+- Exception : les couleurs *métier* (postes, types d'absence, équipes, sites) sont
+  stockées en base, libres, et appliquées en inline.
+- Typographie : **Geist** (sans + mono). Icônes : **Lucide**.
+- Composants : **shadcn/ui** (Radix UI + Tailwind v4), preset Nova.
+- Layout : sidebar émeraude foncée (collapsible) + header sticky ; toute page
+  authentifiée vit dans `src/app/(app)/` et partage ce shell.
+- Mode sombre (dark mode) supporté via tokens.
 
 ### 18.2 Responsive
 - Desktop : expérience principale (1280px+)
