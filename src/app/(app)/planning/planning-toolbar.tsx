@@ -41,7 +41,7 @@ export function PlanningToolbar({
   weekStart,
   rangeLabel,
   templates,
-  published,
+  status,
   canManage,
 }: {
   view: PlanningView;
@@ -51,9 +51,10 @@ export function PlanningToolbar({
   weekStart: string;
   rangeLabel: string;
   templates: { id: string; name: string }[];
-  published: boolean;
+  status: "draft" | "published" | "partial";
   canManage: boolean;
 }) {
+  const published = status === "published";
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -155,14 +156,23 @@ export function PlanningToolbar({
       <span className="text-sm font-medium capitalize">{rangeLabel}</span>
 
       <div className="ml-auto flex items-center gap-2">
-        {published ? (
+        {status === "published" && (
           <Badge
             variant="outline"
             className="border-primary/20 bg-primary/10 text-primary"
           >
             Publié
           </Badge>
-        ) : (
+        )}
+        {status === "partial" && (
+          <Badge
+            variant="outline"
+            className="border-amber-200 bg-amber-50 text-amber-700"
+          >
+            Partiellement publié
+          </Badge>
+        )}
+        {status === "draft" && (
           <Badge variant="outline" className="text-muted-foreground">
             Brouillon
           </Badge>

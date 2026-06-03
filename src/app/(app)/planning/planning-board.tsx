@@ -173,6 +173,31 @@ export function PlanningBoard({
     }
   };
 
+  // Déplace un shift vers la ligne "Non assigné" d'une date.
+  const handleDropUnassigned = async (date: string) => {
+    const id = draggingId;
+    setDraggingId(null);
+    setDropTarget(null);
+    if (!id) return;
+
+    const shift = localShifts.find((s) => s.id === id);
+    if (!shift) return;
+    if (shift.employee_id === null && shift.shift_date === date) return;
+
+    const previous = localShifts;
+    setLocalShifts((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, employee_id: null, shift_date: date } : s,
+      ),
+    );
+
+    const res = await moveShift(id, date, null);
+    if (!res.ok) {
+      setLocalShifts(previous);
+      toast.error(res.error ?? "Déplacement impossible.");
+    }
+  };
+
   const openCreate = (employeeId: string | null, date: string) => {
     if (!canManage) return;
     setDraft({
@@ -240,10 +265,31 @@ export function PlanningBoard({
         ) : (
           nameRow
         )}
-        <span className="ml-2 shrink-0 text-xs text-muted-foreground">
-          {totalFor(emp.id).toFixed(0)}h
-        </span>
+        {renderHoursBadge(emp.id)}
       </div>
+    );
+  };
+
+  // Heures planifiées + écart par rapport au contrat (vert si pile, sinon +/−).
+  const renderHoursBadge = (employeeId: string) => {
+    const planned = totalFor(employeeId);
+    const contract = contractMap.get(employeeId);
+    const delta = contract != null ? planned - contract : null;
+    return (
+      <span className="ml-2 flex shrink-0 flex-col items-end leading-tight">
+        <span className="text-xs font-medium">{planned.toFixed(0)}h</span>
+        {delta != null && Math.abs(delta) >= 0.5 && (
+          <span
+            className={cn(
+              "text-[11px]",
+              delta > 0 ? "text-amber-600" : "text-sky-600",
+            )}
+          >
+            {delta > 0 ? "+" : "−"}
+            {Math.abs(delta).toFixed(0)}h
+          </span>
+        )}
+      </span>
     );
   };
 
@@ -329,6 +375,33 @@ export function PlanningBoard({
     };
   };
 
+  // Heures planifiées sur un jour donné, tous employés confondus (assignés).
+  const dayTotal = (date: string) => {
+    let hours = 0;
+    const people = new Set<string>();
+    for (const s of localShifts) {
+      if (s.shift_date !== date) continue;
+      hours += shiftHours(s.start_time, s.end_time, s.break_minutes);
+      if (s.employee_id) people.add(s.employee_id);
+    }
+    return { hours, people: people.size };
+  };
+
+  const weekTotalHours = days.reduce((sum, d) => sum + dayTotal(d).hours, 0);
+  const contractMap = new Map(contractHours);
+
+  // Statut d'affichage : brouillon / publié / partiellement publié.
+  // "partial" si le planning est publié mais contient des shifts encore en brouillon.
+  const weekShiftsForStatus = localShifts.filter((s) =>
+    new Set(days).has(s.shift_date),
+  );
+  const hasDraftShift = weekShiftsForStatus.some((s) => s.status === "draft");
+  const status: "draft" | "published" | "partial" = !published
+    ? "draft"
+    : hasDraftShift
+      ? "partial"
+      : "published";
+
   // ── Vue Semaine ──────────────────────────────────────────────────────────
   const renderWeek = () => (
     <div className="min-w-[900px] overflow-hidden rounded-lg border">
@@ -348,6 +421,48 @@ export function PlanningBoard({
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Ligne "Non assigné" : shifts sans employé. */}
+      <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-muted/20">
+        <div className="flex items-center p-3 text-sm font-medium text-muted-foreground">
+          Non assigné
+        </div>
+        {days.map((d) => {
+          const key = `none|${d}`;
+          return (
+            <div
+              key={d}
+              className={cn(
+                "group min-h-12 space-y-1 border-l p-1.5 transition-colors",
+                isToday(d) && "bg-primary/5",
+                canManage && "cursor-pointer hover:bg-accent/40",
+                dropTarget === key &&
+                  "bg-primary/15 ring-1 ring-inset ring-primary/40",
+              )}
+              onClick={() =>
+                (cellShifts.get(key)?.length ?? 0) === 0 &&
+                openCreate(null, d)
+              }
+              onDragOver={(e) => {
+                if (!canManage || !draggingId) return;
+                e.preventDefault();
+                if (dropTarget !== key) setDropTarget(key);
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  setDropTarget((t) => (t === key ? null : t));
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDropUnassigned(d);
+              }}
+            >
+              {renderCellContent("none", d)}
+            </div>
+          );
+        })}
       </div>
 
       {employees.length === 0 ? (
@@ -384,6 +499,33 @@ export function PlanningBoard({
             })}
           </div>
         ))
+      )}
+
+      {/* Ligne de totaux par jour. */}
+      {employees.length > 0 && (
+        <div className="grid grid-cols-[200px_repeat(7,1fr)] border-t bg-muted/40 text-sm">
+          <div className="flex items-center justify-between p-3 font-medium">
+            <span>Total</span>
+            <span className="text-primary">{weekTotalHours.toFixed(0)}h</span>
+          </div>
+          {days.map((d) => {
+            const { hours, people } = dayTotal(d);
+            return (
+              <div
+                key={d}
+                className={cn(
+                  "border-l p-3 text-center",
+                  isToday(d) && "bg-primary/5",
+                )}
+              >
+                <div className="font-medium">{hours.toFixed(1)}h</div>
+                <div className="text-xs text-muted-foreground">
+                  {people} pers.
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
@@ -508,7 +650,7 @@ export function PlanningBoard({
         weekStart={weekStart}
         rangeLabel={rangeLabel}
         templates={templates}
-        published={published}
+        status={status}
         canManage={canManage}
       />
 
