@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
-import { Trash2, AlertTriangle, Settings } from "lucide-react";
+import { Trash2, AlertTriangle, Plus, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { createShift, updateShift, deleteShift } from "./actions";
+import { createPositionQuick } from "@/app/(app)/parametres/postes/actions";
 import { shiftHours } from "@/lib/week";
+import { PRESET_COLORS } from "@/lib/colors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -72,6 +74,35 @@ export function ShiftDialog({
   const [isPending, startTransition] = useTransition();
   const [start, setStart] = useState(draft?.start_time ?? "09:00");
   const [end, setEnd] = useState(draft?.end_time ?? "17:00");
+
+  // Liste locale des postes (pour ajouter un poste créé à la volée).
+  const [posList, setPosList] = useState<Position[]>(positions);
+  const [selectedPos, setSelectedPos] = useState<string>(
+    draft?.position_id ?? NONE,
+  );
+  // Mini-formulaire de création de poste inline.
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState<string>(PRESET_COLORS[0]);
+  const [savingPos, setSavingPos] = useState(false);
+
+  const createNewPosition = () => {
+    if (!newName.trim()) return;
+    setSavingPos(true);
+    startTransition(async () => {
+      const res = await createPositionQuick(newName, newColor);
+      setSavingPos(false);
+      if (res.ok) {
+        setPosList((prev) => [...prev, res.position]);
+        setSelectedPos(res.position.id);
+        setCreating(false);
+        setNewName("");
+        toast.success("Poste créé.");
+      } else {
+        toast.error(res.error);
+      }
+    });
+  };
 
   if (!draft) return null;
   const isEdit = !!draft.id;
@@ -160,35 +191,95 @@ export function ShiftDialog({
 
               <div className="space-y-1.5">
                 <Label htmlFor="position_id">Poste</Label>
-                <Select
-                  name="position_id"
-                  defaultValue={draft.position_id ?? NONE}
-                >
-                  <SelectTrigger id="position_id">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>Aucun</SelectItem>
-                    {positions.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        <span className="flex items-center gap-2">
-                          <span
-                            className="size-2.5 rounded-full"
-                            style={{ backgroundColor: p.color }}
-                          />
-                          {p.name}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Link
-                  href="/parametres/postes"
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
-                >
-                  <Settings className="size-3" />
-                  Gérer les postes
-                </Link>
+                {/* La valeur réelle envoyée au formulaire. */}
+                <input type="hidden" name="position_id" value={selectedPos} />
+                {!creating ? (
+                  <>
+                    <Select value={selectedPos} onValueChange={setSelectedPos}>
+                      <SelectTrigger id="position_id">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>Aucun</SelectItem>
+                        {posList.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            <span className="flex items-center gap-2">
+                              <span
+                                className="size-2.5 rounded-full"
+                                style={{ backgroundColor: p.color }}
+                              />
+                              {p.name}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <button
+                      type="button"
+                      onClick={() => setCreating(true)}
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                    >
+                      <Plus className="size-3" />
+                      Créer un poste
+                    </button>
+                  </>
+                ) : (
+                  /* Mini-formulaire de création inline. */
+                  <div className="space-y-2 rounded-md border border-primary/30 bg-primary/5 p-2">
+                    <Input
+                      autoFocus
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          createNewPosition();
+                        }
+                      }}
+                      placeholder="Nom du poste"
+                      className="h-8"
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      {PRESET_COLORS.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setNewColor(c)}
+                          className={cn(
+                            "size-5 rounded-full",
+                            newColor === c && "ring-2 ring-ring ring-offset-1",
+                          )}
+                          style={{ backgroundColor: c }}
+                          aria-label={`Couleur ${c}`}
+                        />
+                      ))}
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-7 flex-1"
+                        onClick={createNewPosition}
+                        disabled={savingPos || !newName.trim()}
+                      >
+                        <Check className="size-3.5" />
+                        {savingPos ? "…" : "Créer"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="ghost"
+                        className="size-7"
+                        onClick={() => {
+                          setCreating(false);
+                          setNewName("");
+                        }}
+                      >
+                        <X className="size-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -229,8 +320,8 @@ export function ShiftDialog({
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-between border-t pt-2 text-sm">
-                <span className="text-muted-foreground">Durée travaillée</span>
+              <div className="flex items-center gap-1.5 border-t pt-2 text-sm">
+                <span className="text-muted-foreground">Durée travaillée :</span>
                 <span className="font-semibold text-primary">
                   {formatDuration(hours)}
                 </span>

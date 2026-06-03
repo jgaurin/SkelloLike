@@ -54,6 +54,43 @@ export async function createPosition(
   return { ok: true };
 }
 
+export type QuickPositionResult =
+  | { ok: true; position: { id: string; name: string; color: string } }
+  | { ok: false; error: string };
+
+/**
+ * Crée un poste rapidement (depuis le dialog d'un shift) et renvoie l'objet créé
+ * pour pouvoir le sélectionner immédiatement.
+ */
+export async function createPositionQuick(
+  name: string,
+  color: string,
+): Promise<QuickPositionResult> {
+  const ctx = await getAppContext();
+  if (!canManage(ctx.role)) {
+    return { ok: false, error: "Droits insuffisants." };
+  }
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return { ok: false, error: "Le nom du poste est obligatoire." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("positions")
+    .insert({ org_id: ctx.orgId, name: trimmed, color: color || DEFAULT_COLOR })
+    .select("id, name, color")
+    .single();
+
+  if (error || !data) {
+    return { ok: false, error: "Impossible de créer le poste." };
+  }
+
+  revalidatePath("/parametres/postes");
+  revalidatePath("/planning");
+  return { ok: true, position: data };
+}
+
 /**
  * Met à jour un poste existant.
  */
