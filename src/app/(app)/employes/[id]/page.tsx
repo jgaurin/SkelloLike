@@ -8,6 +8,8 @@ import { AppHeader } from "@/components/layout/app-header";
 import { EmployeeStatusBadge } from "@/components/employees/status-badge";
 import { EditEmployeeForm } from "./edit-employee-form";
 import { EmployeeActions } from "./employee-actions";
+import { ContractsPanel } from "./contracts-panel";
+import { PositionsPanel } from "./positions-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,15 +19,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-const CONTRACT_LABELS: Record<string, string> = {
-  cdi: "CDI",
-  cdd: "CDD",
-  interim: "Intérim",
-  extra: "Extra",
-  apprenticeship: "Alternance",
-  internship: "Stage",
-};
 
 export default async function EmployeeDetailPage({
   params,
@@ -41,6 +34,7 @@ export default async function EmployeeDetailPage({
     "location_manager",
     "team_manager",
   ].includes(ctx.role);
+  const canManageContracts = ["org_owner", "org_admin"].includes(ctx.role);
 
   const { data: employee } = await supabase
     .from("employees")
@@ -54,11 +48,21 @@ export default async function EmployeeDetailPage({
     notFound();
   }
 
-  const { data: contracts } = await supabase
-    .from("contracts")
-    .select("id, type, start_date, end_date, weekly_hours, hourly_rate")
-    .eq("employee_id", id)
-    .order("start_date", { ascending: false });
+  const [{ data: contracts }, { data: positions }, { data: assigned }] =
+    await Promise.all([
+      supabase
+        .from("contracts")
+        .select("id, type, start_date, end_date, weekly_hours, hourly_rate")
+        .eq("employee_id", id)
+        .order("start_date", { ascending: false }),
+      supabase.from("positions").select("id, name, color").order("name"),
+      supabase
+        .from("employee_positions")
+        .select("position_id")
+        .eq("employee_id", id),
+    ]);
+
+  const assignedIds = (assigned ?? []).map((a) => a.position_id);
 
   return (
     <>
@@ -122,30 +126,30 @@ export default async function EmployeeDetailPage({
                 {contracts?.length ?? 0} contrat(s)
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              {contracts?.length ? (
-                contracts.map((c) => (
-                  <div
-                    key={c.id}
-                    className="rounded-md border px-3 py-2 text-sm"
-                  >
-                    <div className="font-medium">
-                      {CONTRACT_LABELS[c.type] ?? c.type} · {c.weekly_hours}h/sem
-                    </div>
-                    <div className="text-muted-foreground">
-                      Depuis le{" "}
-                      {new Date(c.start_date).toLocaleDateString("fr-FR")}
-                      {c.end_date
-                        ? ` au ${new Date(c.end_date).toLocaleDateString("fr-FR")}`
-                        : ""}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Aucun contrat enregistré.
-                </p>
-              )}
+            <CardContent>
+              <ContractsPanel
+                employeeId={employee.id}
+                contracts={contracts ?? []}
+                positions={positions ?? []}
+                canManage={canManageContracts}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-base">Postes occupables</CardTitle>
+              <CardDescription>
+                Les postes que cet employé peut occuper sur le planning.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PositionsPanel
+                employeeId={employee.id}
+                allPositions={positions ?? []}
+                assignedIds={assignedIds}
+                canManage={canManage}
+              />
             </CardContent>
           </Card>
         </div>
