@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { PlanningToolbar } from "./planning-toolbar";
+import { moveShift } from "./actions";
 import {
   ShiftDialog,
   type ShiftDraft,
@@ -51,16 +53,48 @@ export function PlanningBoard({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<ShiftDraft | null>(null);
 
+  // Copie locale des shifts pour le drag & drop optimiste.
+  const [localShifts, setLocalShifts] = useState<Shift[]>(shifts);
+  useEffect(() => setLocalShifts(shifts), [shifts]);
+
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+
   const posById = new Map(positions.map((p) => [p.id, p]));
 
   // Index shifts par "employeeId|date".
   const cellShifts = new Map<string, Shift[]>();
-  for (const s of shifts) {
+  for (const s of localShifts) {
     const key = `${s.employee_id ?? "none"}|${s.shift_date}`;
     const arr = cellShifts.get(key) ?? [];
     arr.push(s);
     cellShifts.set(key, arr);
   }
+
+  // Déplace un shift vers (employé, date) avec mise à jour optimiste.
+  const handleDrop = async (employeeId: string, date: string) => {
+    const id = draggingId;
+    setDraggingId(null);
+    setDropTarget(null);
+    if (!id) return;
+
+    const shift = localShifts.find((s) => s.id === id);
+    if (!shift) return;
+    if (shift.employee_id === employeeId && shift.shift_date === date) return;
+
+    const previous = localShifts;
+    setLocalShifts((prev) =>
+      prev.map((s) =>
+        s.id === id ? { ...s, employee_id: employeeId, shift_date: date } : s,
+      ),
+    );
+
+    const res = await moveShift(id, date, employeeId);
+    if (!res.ok) {
+      setLocalShifts(previous); // rollback
+      toast.error(res.error ?? "Déplacement impossible.");
+    }
+  };
 
   const openCreate = (employeeId: string | null, date: string) => {
     if (!canManage) return;
@@ -84,7 +118,7 @@ export function PlanningBoard({
 
   // Heures totales par employé sur la semaine.
   const totalFor = (employeeId: string) =>
-    shifts
+    localShifts
       .filter((s) => s.employee_id === employeeId)
       .reduce(
         (sum, s) => sum + shiftHours(s.start_time, s.end_time, s.break_minutes),
@@ -151,13 +185,29 @@ export function PlanningBoard({
                     <div
                       key={d}
                       className={cn(
-                        "group min-h-16 space-y-1 border-l p-1.5",
+                        "group min-h-16 space-y-1 border-l p-1.5 transition-colors",
                         isToday(d) && "bg-primary/5",
                         canManage && "cursor-pointer hover:bg-accent/40",
+                        dropTarget === key && "bg-primary/15 ring-1 ring-inset ring-primary/40",
                       )}
                       onClick={() =>
                         cell.length === 0 && openCreate(emp.id, d)
                       }
+                      onDragOver={(e) => {
+                        if (!canManage || !draggingId) return;
+                        e.preventDefault();
+                        if (dropTarget !== key) setDropTarget(key);
+                      }}
+                      onDragLeave={(e) => {
+                        // Ne réinitialise que si on quitte réellement la cellule.
+                        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                          setDropTarget((t) => (t === key ? null : t));
+                        }
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        handleDrop(emp.id, d);
+                      }}
                     >
                       {cell.map((s) => {
                         const pos = s.position_id
@@ -168,11 +218,24 @@ export function PlanningBoard({
                           <button
                             key={s.id}
                             type="button"
+                            draggable={canManage}
+                            onDragStart={(e) => {
+                              setDraggingId(s.id);
+                              e.dataTransfer.effectAllowed = "move";
+                            }}
+                            onDragEnd={() => {
+                              setDraggingId(null);
+                              setDropTarget(null);
+                            }}
                             onClick={(e) => {
                               e.stopPropagation();
                               openEdit(s);
                             }}
-                            className="block w-full rounded-md px-2 py-1 text-left text-xs font-medium text-white"
+                            className={cn(
+                              "block w-full rounded-md px-2 py-1 text-left text-xs font-medium text-white transition",
+                              canManage && "cursor-grab active:cursor-grabbing",
+                              draggingId === s.id && "opacity-40",
+                            )}
                             style={{ backgroundColor: color }}
                           >
                             <div>

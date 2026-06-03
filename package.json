@@ -11,7 +11,8 @@
     "db:stop": "supabase stop",
     "db:status": "supabase status",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/types/database.ts"
+    "db:types": "supabase gen types typescript --local > src/lib/types/database.ts",
+    "db:seed-demo": "docker exec -i supabase_db_SkelloLike psql -U postgres < supabase/seed-demo.sql"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
