@@ -54,6 +54,7 @@ export function PlanningBoard({
   employees,
   positions,
   shifts,
+  absences,
   contractHours,
   employeePositions,
   published,
@@ -69,6 +70,7 @@ export function PlanningBoard({
   employees: Employee[];
   positions: Position[];
   shifts: Shift[];
+  absences: { employee_id: string; date: string; name: string; color: string }[];
   contractHours: [string, number][];
   employeePositions: [string, string[]][];
   published: boolean;
@@ -130,6 +132,15 @@ export function PlanningBoard({
     const arr = cellShifts.get(key) ?? [];
     arr.push(s);
     cellShifts.set(key, arr);
+  }
+
+  // Index absences par "employeeId|date".
+  const absenceByCell = new Map<string, { name: string; color: string }>();
+  for (const a of absences) {
+    absenceByCell.set(`${a.employee_id}|${a.date}`, {
+      name: a.name,
+      color: a.color,
+    });
   }
 
   // Déplace un shift vers (employé, date) avec mise à jour optimiste.
@@ -231,11 +242,25 @@ export function PlanningBoard({
     );
   };
 
-  // Rend le contenu d'une cellule (employé × jour) : shifts + bouton "+".
+  // Rend le contenu d'une cellule (employé × jour) : absence, shifts, bouton "+".
   const renderCellContent = (employeeId: string, date: string) => {
     const cell = cellShifts.get(`${employeeId}|${date}`) ?? [];
+    const absence = absenceByCell.get(`${employeeId}|${date}`);
     return (
       <>
+        {absence && (
+          <div
+            className="truncate rounded-md px-2 py-1 text-xs font-medium"
+            style={{
+              backgroundColor: `${absence.color}1f`,
+              color: absence.color,
+              borderLeft: `3px solid ${absence.color}`,
+            }}
+            title={absence.name}
+          >
+            {absence.name}
+          </div>
+        )}
         {cell.map((s) => {
           const pos = s.position_id ? posById.get(s.position_id) : null;
           const shiftAlerts = alerts.byShift.get(s.id);
