@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git --version)",
+      "Bash(echo \"---exit:$?\")",
+      "Bash(docker --version)",
+      "Bash(echo \"docker-exit:$?\")",
+      "Bash(npx supabase *)",
+      "Bash(echo \"supabase-exit:$?\")",
+      "Bash(echo \"exit:$?\")",
+      "Bash(npx --yes create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack --no-git --yes)",
+      "Bash(npx --yes create-next-app@latest skellolike-app --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack --no-git --yes)",
+      "Bash(npx --yes supabase init)",
+      "Bash(npm install *)",
+      "Bash(npx --yes shadcn@latest add input label card form sonner dropdown-menu avatar -y)"
+    ]
+  }
+}
