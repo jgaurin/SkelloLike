@@ -7,6 +7,7 @@ import {
   Umbrella,
   UsersRound,
   BellRing,
+  SlidersHorizontal,
   ChevronRight,
 } from "lucide-react";
 
@@ -21,6 +22,12 @@ import {
 } from "@/components/ui/card";
 
 const settings = [
+  {
+    href: "/parametres/regles",
+    icon: SlidersHorizontal,
+    title: "Règles et compteurs",
+    description: "Convention, charges patronales, indemnités repas…",
+  },
   {
     href: "/parametres/postes",
     icon: Briefcase,

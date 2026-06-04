@@ -511,28 +511,43 @@ export type Database = {
       }
       organizations: {
         Row: {
+          collective_agreement: string | null
           created_at: string
           id: string
+          meal_allowance_amount: number
+          meal_allowance_enabled: boolean
           name: string
+          payroll_charge_rate: number
           plan: Database["public"]["Enums"]["org_plan"]
+          reference_days_per_week: number
           slug: string
           trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
+          collective_agreement?: string | null
           created_at?: string
           id?: string
+          meal_allowance_amount?: number
+          meal_allowance_enabled?: boolean
           name: string
+          payroll_charge_rate?: number
           plan?: Database["public"]["Enums"]["org_plan"]
+          reference_days_per_week?: number
           slug: string
           trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
+          collective_agreement?: string | null
           created_at?: string
           id?: string
+          meal_allowance_amount?: number
+          meal_allowance_enabled?: boolean
           name?: string
+          payroll_charge_rate?: number
           plan?: Database["public"]["Enums"]["org_plan"]
+          reference_days_per_week?: number
           slug?: string
           trial_ends_at?: string | null
           updated_at?: string
