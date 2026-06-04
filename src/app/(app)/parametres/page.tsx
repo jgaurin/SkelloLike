@@ -4,6 +4,7 @@ import {
   Building2,
   Coffee,
   CalendarPlus,
+  Umbrella,
   ChevronRight,
 } from "lucide-react";
 
@@ -35,6 +36,12 @@ const settings = [
     icon: CalendarPlus,
     title: "Acquisition des congés",
     description: "Taux d'acquisition mensuel par type (CP, RTT…).",
+  },
+  {
+    href: "/parametres/absences",
+    icon: Umbrella,
+    title: "Absences",
+    description: "Activez les types d'absence et leurs règles.",
   },
   {
     href: "/etablissements",

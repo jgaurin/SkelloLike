@@ -33,7 +33,13 @@ export default async function AbsencesPage() {
         .select("id, first_name, last_name")
         .eq("status", "active")
         .order("last_name"),
-      supabase.from("absence_types").select("id, name").order("name"),
+      // Seuls les types actifs apparaissent à la création d'une absence.
+      supabase
+        .from("absence_types")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("sort_order")
+        .order("name"),
     ]);
 
   const rows: AbsenceRow[] = (requests ?? []).map((r) => ({

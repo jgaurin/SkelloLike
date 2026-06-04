@@ -102,35 +102,47 @@ export type Database = {
         Row: {
           affects_counter: boolean
           annual_cap: number
+          can_be_requested: boolean
           color: string
           created_at: string
           id: string
+          is_active: boolean
           monthly_accrual: number
           name: string
           org_id: string
+          paid_by: string
           period_start_month: number
+          sort_order: number
         }
         Insert: {
           affects_counter?: boolean
           annual_cap?: number
+          can_be_requested?: boolean
           color?: string
           created_at?: string
           id?: string
+          is_active?: boolean
           monthly_accrual?: number
           name: string
           org_id: string
+          paid_by?: string
           period_start_month?: number
+          sort_order?: number
         }
         Update: {
           affects_counter?: boolean
           annual_cap?: number
+          can_be_requested?: boolean
           color?: string
           created_at?: string
           id?: string
+          is_active?: boolean
           monthly_accrual?: number
           name?: string
           org_id?: string
+          paid_by?: string
           period_start_month?: number
+          sort_order?: number
         }
         Relationships: [
           {
