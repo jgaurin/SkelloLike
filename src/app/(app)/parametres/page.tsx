@@ -5,6 +5,7 @@ import {
   Coffee,
   CalendarPlus,
   Umbrella,
+  UsersRound,
   ChevronRight,
 } from "lucide-react";
 
@@ -42,6 +43,12 @@ const settings = [
     icon: Umbrella,
     title: "Absences",
     description: "Activez les types d'absence et leurs règles.",
+  },
+  {
+    href: "/parametres/equipes",
+    icon: UsersRound,
+    title: "Équipes",
+    description: "Regroupez vos employés en équipes.",
   },
   {
     href: "/etablissements",
