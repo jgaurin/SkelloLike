@@ -275,16 +275,21 @@ export function TeamsManager({
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={!canManage}
-                onClick={() => canManage && setMembers(t)}
-                className="mt-2 text-left text-sm text-muted-foreground hover:text-primary disabled:hover:text-muted-foreground"
-              >
+              <p className="mt-2 text-sm text-muted-foreground">
                 {t.memberIds.length} employé
-                {t.memberIds.length > 1 ? "s" : ""} ·{" "}
-                {canManage ? "modifier" : ""}
-              </button>
+                {t.memberIds.length > 1 ? "s" : ""}
+              </p>
+              {canManage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full"
+                  onClick={() => setMembers(t)}
+                >
+                  <Users className="size-4" />
+                  Gérer les employés
+                </Button>
+              )}
             </div>
           ))}
         </div>

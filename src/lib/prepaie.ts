@@ -34,6 +34,8 @@ export type PrepaieRow = {
   absencesByType: Record<string, number>;
   /** Nombre de jours fériés tombant un jour de shift planifié de l'employé. */
   holidaysWorked: number;
+  /** Indemnités repas (€) = jours travaillés × montant par repas. */
+  mealAllowance: number;
 };
 
 /** Numéro de semaine ISO 8601 d'une date ISO. */
@@ -70,6 +72,8 @@ export type PrepaieInput = {
   absences: PrepaieAbsence[];
   /** Dates ISO des jours fériés du mois. */
   holidays: Set<string>;
+  /** Indemnité repas (€) par jour travaillé. 0 = désactivé. */
+  mealAmount: number;
   monthStart: string; // YYYY-MM-01
   monthEnd: string; // dernier jour du mois
 };
@@ -159,14 +163,17 @@ export function computePrepaie(input: PrepaieInput): {
       }
     }
 
+    const workedDays = acc?.days.size ?? 0;
+
     return {
       name: `${e.last_name.toUpperCase()} ${e.first_name}`,
-      workedDays: acc?.days.size ?? 0,
+      workedDays,
       workedHours: round2(workedHours),
       overtimeByWeek,
       overtimeTotal: round2(overtimeTotal),
       absencesByType,
       holidaysWorked,
+      mealAllowance: round2(workedDays * input.mealAmount),
     };
   });
 

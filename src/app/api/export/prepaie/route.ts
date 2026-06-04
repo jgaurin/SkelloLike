@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
     { data: contracts },
     { data: shiftRows },
     { data: absRows },
+    { data: org },
   ] = await Promise.all([
     supabase
       .from("employees")
@@ -74,7 +75,7 @@ export async function GET(request: NextRequest) {
       .order("last_name"),
     supabase
       .from("contracts")
-      .select("employee_id, weekly_hours, start_date")
+      .select("employee_id, weekly_hours, hourly_rate, start_date")
       .order("start_date", { ascending: false }),
     supabase
       .from("shifts")
@@ -90,13 +91,26 @@ export async function GET(request: NextRequest) {
       .eq("status", "approved")
       .lte("start_date", end)
       .gte("end_date", start),
+    supabase
+      .from("organizations")
+      .select(
+        "payroll_charge_rate, meal_allowance_enabled, meal_allowance_amount",
+      )
+      .eq("id", ctx.orgId)
+      .single(),
   ]);
 
-  // Contrat le plus récent par employé.
+  const mealAmount =
+    org?.meal_allowance_enabled ? Number(org.meal_allowance_amount) : 0;
+  const chargeRate = Number(org?.payroll_charge_rate ?? 0);
+
+  // Contrat le plus récent par employé (heures hebdo + taux horaire).
   const contractHours = new Map<string, number>();
+  const hourlyRate = new Map<string, number>();
   for (const c of contracts ?? []) {
     if (!contractHours.has(c.employee_id)) {
       contractHours.set(c.employee_id, Number(c.weekly_hours));
+      hourlyRate.set(c.employee_id, Number(c.hourly_rate ?? 0));
     }
   }
 
@@ -117,13 +131,14 @@ export async function GET(request: NextRequest) {
       end_date: a.end_date,
     })),
     holidays: new Set(holidaysInRange(start, end).keys()),
+    mealAmount,
     monthStart: start,
     monthEnd: end,
   });
 
   // ── Définition des colonnes, groupées par section ────────────────────────
   // Chaque colonne : libellé, section (pour la couleur), accès à la valeur.
-  type Section = "id" | "work" | "overtime" | "absence";
+  type Section = "id" | "work" | "overtime" | "absence" | "payroll";
   type Col = {
     header: string;
     section: Section;
@@ -175,6 +190,41 @@ export async function GET(request: NextRequest) {
     ),
   ];
 
+  // Colonnes de pré-paie (n'apparaissent que si activées dans les réglages).
+  if (mealAmount > 0) {
+    columns.push({
+      header: "Indemnités\nrepas (€)",
+      section: "payroll",
+      width: 12,
+      value: (r) => r.mealAllowance,
+    });
+  }
+  // Coût chargé estimé par employé = heures × taux horaire × (1 + charges%).
+  // Disponible uniquement pour les employés ayant un taux horaire au contrat.
+  const hasAnyRate = [...hourlyRate.values()].some((r) => r > 0);
+  if (chargeRate > 0 && hasAnyRate) {
+    const costByEmp = new Map<string, number>();
+    (employees ?? []).forEach((e, i) => {
+      const rate = hourlyRate.get(e.id) ?? 0;
+      const hrs = rows[i]?.workedHours ?? 0;
+      costByEmp.set(
+        e.id,
+        Math.round(hrs * rate * (1 + chargeRate / 100) * 100) / 100,
+      );
+    });
+    // On indexe par nom de ligne (rows et employees partagent l'ordre).
+    const costByIndex = (employees ?? []).map((e) => costByEmp.get(e.id) ?? 0);
+    columns.push({
+      header: `Coût chargé\n(+${chargeRate}%)`,
+      section: "payroll",
+      width: 14,
+      value: (r) => {
+        const idx = rows.indexOf(r);
+        return idx >= 0 ? costByIndex[idx] : 0;
+      },
+    });
+  }
+
   const filenameBase = `prepaie_${location.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}_${label}`;
 
   // ── Export Excel stylé (ExcelJS) ─────────────────────────────────────────
@@ -191,12 +241,14 @@ export async function GET(request: NextRequest) {
       work: "FF059669", // émeraude
       overtime: "FFF59E0B", // ambre
       absence: "FF6366F1", // indigo
+      payroll: "FFDC2626", // rouge (paie)
     };
     const sectionLabel: Record<Section, string> = {
       id: "",
       work: "TRAVAIL",
       overtime: "HEURES SUPP.",
       absence: "ABSENCES (jours)",
+      payroll: "PRÉ-PAIE (€)",
     };
 
     ws.columns = columns.map((c) => ({ width: c.width }));
