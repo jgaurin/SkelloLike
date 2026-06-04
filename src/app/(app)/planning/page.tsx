@@ -16,6 +16,7 @@ import {
 } from "@/lib/week";
 import { PlanningBoard } from "./planning-board";
 import { parseBreakRules } from "@/lib/breaks";
+import { holidaysInRange } from "@/lib/holidays";
 
 const MANAGER_ROLES = [
   "org_owner",
@@ -71,6 +72,9 @@ export default async function PlanningPage({
         : getMonday(baseDate);
 
   const range = viewRange(view, anchor);
+
+  // Jours fériés français tombant dans la plage affichée.
+  const holidays = Array.from(holidaysInRange(range.from, range.to).entries());
 
   // Employés actifs + postes + contrats + postes occupables.
   const [
@@ -200,6 +204,7 @@ export default async function PlanningPage({
         )}
         breakRules={breakRules}
         templates={templates ?? []}
+        holidays={holidays}
         published={schedule?.status === "published"}
         canManage={canManage}
       />

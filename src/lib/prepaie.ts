@@ -32,6 +32,8 @@ export type PrepaieRow = {
   overtimeTotal: number;
   /** Heures/jours d'absence par type (libellé du type). */
   absencesByType: Record<string, number>;
+  /** Nombre de jours fériés tombant un jour de shift planifié de l'employé. */
+  holidaysWorked: number;
 };
 
 /** Numéro de semaine ISO 8601 d'une date ISO. */
@@ -66,6 +68,8 @@ export type PrepaieInput = {
   contractHours: Map<string, number>;
   shifts: PrepaieShift[];
   absences: PrepaieAbsence[];
+  /** Dates ISO des jours fériés du mois. */
+  holidays: Set<string>;
   monthStart: string; // YYYY-MM-01
   monthEnd: string; // dernier jour du mois
 };
@@ -147,6 +151,14 @@ export function computePrepaie(input: PrepaieInput): {
       absencesByType[t] = round2(m?.get(t) ?? 0);
     }
 
+    // Jours fériés sur lesquels l'employé a un shift planifié.
+    let holidaysWorked = 0;
+    if (acc) {
+      for (const day of acc.days) {
+        if (input.holidays.has(day)) holidaysWorked++;
+      }
+    }
+
     return {
       name: `${e.last_name.toUpperCase()} ${e.first_name}`,
       workedDays: acc?.days.size ?? 0,
@@ -154,6 +166,7 @@ export function computePrepaie(input: PrepaieInput): {
       overtimeByWeek,
       overtimeTotal: round2(overtimeTotal),
       absencesByType,
+      holidaysWorked,
     };
   });
 

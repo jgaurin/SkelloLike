@@ -60,6 +60,7 @@ export function PlanningBoard({
   employeePositions,
   breakRules,
   templates,
+  holidays,
   published,
   canManage,
 }: {
@@ -78,6 +79,7 @@ export function PlanningBoard({
   employeePositions: [string, string[]][];
   breakRules: BreakRule[];
   templates: { id: string; name: string }[];
+  holidays: [string, string][];
   published: boolean;
   canManage: boolean;
 }) {
@@ -147,6 +149,10 @@ export function PlanningBoard({
       color: a.color,
     });
   }
+
+  // Jours fériés par date ISO.
+  const holidayMap = new Map(holidays);
+  const isHoliday = (date: string) => holidayMap.has(date);
 
   // Déplace un shift vers (employé, date) avec mise à jour optimiste.
   const handleDrop = async (employeeId: string, date: string) => {
@@ -417,12 +423,21 @@ export function PlanningBoard({
             className={cn(
               "border-l p-3 text-center",
               isToday(d) && "bg-primary/5",
+              isHoliday(d) && "bg-rose-50",
             )}
           >
             <div className="font-medium">{WEEKDAYS_SHORT[i]}</div>
             <div className="text-xs text-muted-foreground">
               {fromISODate(d).getDate()}
             </div>
+            {isHoliday(d) && (
+              <div
+                className="mt-0.5 truncate text-[10px] font-medium text-rose-600"
+                title={holidayMap.get(d)}
+              >
+                {holidayMap.get(d)}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -488,6 +503,7 @@ export function PlanningBoard({
                   className={cn(
                     "group min-h-16 space-y-1 border-l p-1.5 transition-colors",
                     isToday(d) && "bg-primary/5",
+                    isHoliday(d) && "bg-rose-50/60",
                     canManage && "cursor-pointer hover:bg-accent/40",
                     dp.isTarget &&
                       "bg-primary/15 ring-1 ring-inset ring-primary/40",
@@ -608,12 +624,23 @@ export function PlanningBoard({
                   "min-h-24 space-y-0.5 border-b border-l p-1 [&:nth-child(7n+1)]:border-l-0",
                   !inMonth && "bg-muted/30 text-muted-foreground",
                   isToday(iso) && "bg-primary/5",
+                  isHoliday(iso) && inMonth && "bg-rose-50/60",
                   canManage && "cursor-pointer hover:bg-accent/30",
                 )}
                 onClick={() => openCreate(null, iso)}
               >
-                <div className="px-1 text-xs font-medium">
-                  {fromISODate(iso).getDate()}
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-medium">
+                    {fromISODate(iso).getDate()}
+                  </span>
+                  {isHoliday(iso) && (
+                    <span
+                      className="truncate text-[9px] font-medium text-rose-600"
+                      title={holidayMap.get(iso)}
+                    >
+                      {holidayMap.get(iso)}
+                    </span>
+                  )}
                 </div>
                 {dayShifts.slice(0, 4).map((s) => {
                   const pos = s.position_id ? posById.get(s.position_id) : null;

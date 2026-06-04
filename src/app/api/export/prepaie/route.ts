@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { trimSeconds } from "@/lib/week";
 import { computePrepaie } from "@/lib/prepaie";
+import { holidaysInRange } from "@/lib/holidays";
 
 const MANAGER_ROLES = [
   "org_owner",
@@ -115,6 +116,7 @@ export async function GET(request: NextRequest) {
       start_date: a.start_date,
       end_date: a.end_date,
     })),
+    holidays: new Set(holidaysInRange(start, end).keys()),
     monthStart: start,
     monthEnd: end,
   });
@@ -156,6 +158,12 @@ export async function GET(request: NextRequest) {
       section: "overtime",
       width: 10,
       value: (r) => r.overtimeTotal,
+    },
+    {
+      header: "Jours\nfériés",
+      section: "absence",
+      width: 9,
+      value: (r) => r.holidaysWorked,
     },
     ...absenceTypes.map(
       (t): Col => ({
