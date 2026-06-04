@@ -42,6 +42,7 @@ export function PlanningToolbar({
   rangeLabel,
   templates,
   status,
+  blockingCount,
   canManage,
 }: {
   view: PlanningView;
@@ -52,9 +53,11 @@ export function PlanningToolbar({
   rangeLabel: string;
   templates: { id: string; name: string }[];
   status: "draft" | "published" | "partial";
+  blockingCount: number;
   canManage: boolean;
 }) {
   const published = status === "published";
+  const blocked = blockingCount > 0;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -185,7 +188,16 @@ export function PlanningToolbar({
           />
         )}
         {canManage && (
-          <Button size="sm" onClick={onPublish} disabled={isPending}>
+          <Button
+            size="sm"
+            onClick={onPublish}
+            disabled={isPending || blocked}
+            title={
+              blocked
+                ? `${blockingCount} alerte(s) bloquante(s) à résoudre avant publication`
+                : undefined
+            }
+          >
             <Send className="size-4" />
             {published ? "Republier" : "Publier"}
           </Button>

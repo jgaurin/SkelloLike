@@ -6,6 +6,7 @@ import {
   CalendarPlus,
   Umbrella,
   UsersRound,
+  BellRing,
   ChevronRight,
 } from "lucide-react";
 
@@ -49,6 +50,12 @@ const settings = [
     icon: UsersRound,
     title: "Équipes",
     description: "Regroupez vos employés en équipes.",
+  },
+  {
+    href: "/parametres/alertes",
+    icon: BellRing,
+    title: "Alertes",
+    description: "Activez les alertes du planning et leur caractère bloquant.",
   },
   {
     href: "/etablissements",

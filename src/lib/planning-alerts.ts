@@ -7,6 +7,61 @@ import { shiftHours, timeToMinutes, fromISODate } from "@/lib/week";
 
 export type AlertLevel = "warning" | "info";
 
+/** Codes d'alerte configurables (clé stable stockée en base). */
+export type AlertCode =
+  | "contract_overtime"
+  | "min_rest"
+  | "max_shift_hours"
+  | "missing_skill"
+  | "overlap";
+
+/** Catalogue : libellé + description de chaque alerte (pour les paramètres). */
+export const ALERT_CATALOG: {
+  code: AlertCode;
+  label: string;
+  description: string;
+}[] = [
+  {
+    code: "contract_overtime",
+    label: "Dépassement du temps contractuel",
+    description:
+      "L'employé est planifié au-delà de ses heures hebdomadaires contractuelles.",
+  },
+  {
+    code: "min_rest",
+    label: "Repos journalier insuffisant",
+    description:
+      "Moins de 11h de repos entre deux services (droit du travail).",
+  },
+  {
+    code: "max_shift_hours",
+    label: "Volume horaire journée",
+    description: "Un service dépasse 10h de travail effectif.",
+  },
+  {
+    code: "missing_skill",
+    label: "Compétence manquante",
+    description: "L'employé n'est pas habilité au poste affecté.",
+  },
+  {
+    code: "overlap",
+    label: "Conflit d'horaires",
+    description: "Deux shifts de l'employé se chevauchent.",
+  },
+];
+
+/** Réglage d'une alerte : activée et/ou bloquante. */
+export type AlertSetting = { enabled: boolean; blocking: boolean };
+export type AlertSettings = Partial<Record<AlertCode, AlertSetting>>;
+
+/** Réglage effectif d'un code (par défaut : activé, non bloquant). */
+function settingFor(
+  settings: AlertSettings | undefined,
+  code: AlertCode,
+): AlertSetting {
+  return settings?.[code] ?? { enabled: true, blocking: false };
+}
+
 export type ShiftLike = {
   id: string;
   employee_id: string | null;
@@ -20,14 +75,18 @@ export type ShiftLike = {
 /** Alerte rattachée à un shift précis. */
 export type ShiftAlert = {
   shiftId: string;
+  code: AlertCode;
   level: AlertLevel;
+  blocking: boolean;
   message: string;
 };
 
 /** Alerte rattachée à un employé (semaine). */
 export type EmployeeAlert = {
   employeeId: string;
+  code: AlertCode;
   level: AlertLevel;
+  blocking: boolean;
   message: string;
 };
 
@@ -70,23 +129,43 @@ function shiftBounds(s: ShiftLike): { start: number; end: number } {
 export function computeAlerts(
   shifts: ShiftLike[],
   ctx: AlertContext,
+  settings?: AlertSettings,
 ): {
   byShift: Map<string, ShiftAlert[]>;
   byEmployee: Map<string, EmployeeAlert[]>;
   total: number;
+  blockingTotal: number;
 } {
   const byShift = new Map<string, ShiftAlert[]>();
   const byEmployee = new Map<string, EmployeeAlert[]>();
 
-  const addShift = (a: ShiftAlert) => {
-    const arr = byShift.get(a.shiftId) ?? [];
-    arr.push(a);
-    byShift.set(a.shiftId, arr);
+  const addShift = (
+    code: AlertCode,
+    shiftId: string,
+    message: string,
+  ) => {
+    const st = settingFor(settings, code);
+    if (!st.enabled) return;
+    const arr = byShift.get(shiftId) ?? [];
+    arr.push({ shiftId, code, level: "warning", blocking: st.blocking, message });
+    byShift.set(shiftId, arr);
   };
-  const addEmployee = (a: EmployeeAlert) => {
-    const arr = byEmployee.get(a.employeeId) ?? [];
-    arr.push(a);
-    byEmployee.set(a.employeeId, arr);
+  const addEmployee = (
+    code: AlertCode,
+    employeeId: string,
+    message: string,
+  ) => {
+    const st = settingFor(settings, code);
+    if (!st.enabled) return;
+    const arr = byEmployee.get(employeeId) ?? [];
+    arr.push({
+      employeeId,
+      code,
+      level: "warning",
+      blocking: st.blocking,
+      message,
+    });
+    byEmployee.set(employeeId, arr);
   };
 
   // Regroupe les shifts par employé.
@@ -104,11 +183,11 @@ export function computeAlerts(
     if (contract != null) {
       const worked = weeklyHours(empShifts);
       if (worked > contract + 0.01) {
-        addEmployee({
+        addEmployee(
+          "contract_overtime",
           employeeId,
-          level: "warning",
-          message: `${worked.toFixed(1)}h planifiées pour ${contract}h au contrat (+${(worked - contract).toFixed(1)}h)`,
-        });
+          `${worked.toFixed(1)}h planifiées pour ${contract}h au contrat (+${(worked - contract).toFixed(1)}h)`,
+        );
       }
     }
 
@@ -116,19 +195,15 @@ export function computeAlerts(
     const skills = ctx.employeePositions.get(employeeId);
     for (const s of empShifts) {
       if (s.position_id && skills && !skills.has(s.position_id)) {
-        addShift({
-          shiftId: s.id,
-          level: "warning",
-          message: "Poste non assigné à cet employé",
-        });
+        addShift("missing_skill", s.id, "Poste non assigné à cet employé");
       }
       const h = shiftHours(s.start_time, s.end_time, s.break_minutes);
       if (h > MAX_SHIFT_HOURS) {
-        addShift({
-          shiftId: s.id,
-          level: "warning",
-          message: `Service de ${h.toFixed(1)}h (> ${MAX_SHIFT_HOURS}h)`,
-        });
+        addShift(
+          "max_shift_hours",
+          s.id,
+          `Service de ${h.toFixed(1)}h (> ${MAX_SHIFT_HOURS}h)`,
+        );
       }
     }
 
@@ -142,24 +217,27 @@ export function computeAlerts(
       const gapHours = (curr.start - prev.end) / 60;
 
       if (gapHours < 0) {
-        addShift({
-          shiftId: sorted[i].id,
-          level: "warning",
-          message: "Chevauchement avec un autre shift",
-        });
+        addShift("overlap", sorted[i].id, "Chevauchement avec un autre shift");
       } else if (gapHours < MIN_REST_HOURS) {
-        addShift({
-          shiftId: sorted[i].id,
-          level: "warning",
-          message: `Repos de ${gapHours.toFixed(1)}h (< ${MIN_REST_HOURS}h légales)`,
-        });
+        addShift(
+          "min_rest",
+          sorted[i].id,
+          `Repos de ${gapHours.toFixed(1)}h (< ${MIN_REST_HOURS}h légales)`,
+        );
       }
     }
   }
 
   let total = 0;
-  byShift.forEach((a) => (total += a.length));
-  byEmployee.forEach((a) => (total += a.length));
+  let blockingTotal = 0;
+  byShift.forEach((arr) => {
+    total += arr.length;
+    blockingTotal += arr.filter((a) => a.blocking).length;
+  });
+  byEmployee.forEach((arr) => {
+    total += arr.length;
+    blockingTotal += arr.filter((a) => a.blocking).length;
+  });
 
-  return { byShift, byEmployee, total };
+  return { byShift, byEmployee, total, blockingTotal };
 }

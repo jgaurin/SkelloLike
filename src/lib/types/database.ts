@@ -154,6 +154,38 @@ export type Database = {
           },
         ]
       }
+      alert_settings: {
+        Row: {
+          alert_code: string
+          blocking: boolean
+          enabled: boolean
+          id: string
+          org_id: string
+        }
+        Insert: {
+          alert_code: string
+          blocking?: boolean
+          enabled?: boolean
+          id?: string
+          org_id: string
+        }
+        Update: {
+          alert_code?: string
+          blocking?: boolean
+          enabled?: boolean
+          id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contracts: {
         Row: {
           created_at: string

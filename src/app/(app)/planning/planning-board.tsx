@@ -61,6 +61,7 @@ export function PlanningBoard({
   breakRules,
   templates,
   holidays,
+  alertSettings,
   published,
   canManage,
 }: {
@@ -80,6 +81,7 @@ export function PlanningBoard({
   breakRules: BreakRule[];
   templates: { id: string; name: string }[];
   holidays: [string, string][];
+  alertSettings: Record<string, { enabled: boolean; blocking: boolean }>;
   published: boolean;
   canManage: boolean;
 }) {
@@ -106,8 +108,8 @@ export function PlanningBoard({
     // Les alertes hebdo se calculent sur la semaine de l'ancre.
     const weekSet = new Set(days);
     const weekShifts = localShifts.filter((s) => weekSet.has(s.shift_date));
-    return computeAlerts(weekShifts, ctx);
-  }, [localShifts, contractHours, employeePositions, days]);
+    return computeAlerts(weekShifts, ctx, alertSettings);
+  }, [localShifts, contractHours, employeePositions, days, alertSettings]);
 
   // Toutes les alertes d'un employé (niveau employé + niveau shift), pour le tooltip.
   const employeeAlertMessages = useMemo(() => {
@@ -682,6 +684,7 @@ export function PlanningBoard({
         rangeLabel={rangeLabel}
         templates={templates}
         status={status}
+        blockingCount={alerts.blockingTotal}
         canManage={canManage}
       />
 

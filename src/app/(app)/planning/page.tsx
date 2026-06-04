@@ -183,6 +183,16 @@ export default async function PlanningPage({
       .order("created_at", { ascending: false }),
   ]);
 
+  // Réglages des alertes de l'organisation (activées / bloquantes).
+  const { data: alertRows } = await supabase
+    .from("alert_settings")
+    .select("alert_code, enabled, blocking");
+  const alertSettings: Record<string, { enabled: boolean; blocking: boolean }> =
+    {};
+  for (const a of alertRows ?? []) {
+    alertSettings[a.alert_code] = { enabled: a.enabled, blocking: a.blocking };
+  }
+
   return (
     <>
       <AppHeader title="Planning" fullName={ctx.fullName} email={ctx.email} />
@@ -205,6 +215,7 @@ export default async function PlanningPage({
         breakRules={breakRules}
         templates={templates ?? []}
         holidays={holidays}
+        alertSettings={alertSettings}
         published={schedule?.status === "published"}
         canManage={canManage}
       />
