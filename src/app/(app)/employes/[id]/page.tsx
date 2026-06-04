@@ -8,6 +8,7 @@ import { AppHeader } from "@/components/layout/app-header";
 import { EmployeeStatusBadge } from "@/components/employees/status-badge";
 import { EditEmployeeForm } from "./edit-employee-form";
 import { EmployeeActions } from "./employee-actions";
+import { InviteButton } from "./invite-button";
 import { ContractsPanel } from "./contracts-panel";
 import { PositionsPanel } from "./positions-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -39,7 +40,7 @@ export default async function EmployeeDetailPage({
   const { data: employee } = await supabase
     .from("employees")
     .select(
-      "id, first_name, last_name, email, phone, employee_number, hire_date, status",
+      "id, first_name, last_name, email, phone, employee_number, hire_date, status, user_id",
     )
     .eq("id", id)
     .maybeSingle();
@@ -99,10 +100,16 @@ export default async function EmployeeDetailPage({
             </div>
           </div>
           {canManage && (
-            <EmployeeActions
-              id={employee.id}
-              name={`${employee.first_name} ${employee.last_name}`}
-            />
+            <div className="flex items-center gap-2">
+              <InviteButton
+                employeeId={employee.id}
+                hasAccount={!!employee.user_id}
+              />
+              <EmployeeActions
+                id={employee.id}
+                name={`${employee.first_name} ${employee.last_name}`}
+              />
+            </div>
           )}
         </div>
 

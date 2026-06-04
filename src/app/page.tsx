@@ -20,12 +20,17 @@ export default async function HomePage() {
 
   const { data: membership } = await supabase
     .from("memberships")
-    .select("org_id")
+    .select("org_id, role")
     .limit(1)
     .maybeSingle();
 
   if (!membership) {
     redirect("/onboarding");
+  }
+
+  // Les employés ont leur propre espace ; les managers le tableau de bord.
+  if (membership.role === "employee") {
+    redirect("/mon-espace");
   }
 
   redirect("/dashboard");
