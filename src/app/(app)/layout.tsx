@@ -28,6 +28,11 @@ export default async function AppLayout({
     redirect("/onboarding");
   }
 
+  // Un employé n'a pas accès à l'espace de gestion : on le renvoie au sien.
+  if (membership.role === "employee") {
+    redirect("/mon-espace");
+  }
+
   const orgName = membership.organizations?.name ?? "Mon entreprise";
 
   return (

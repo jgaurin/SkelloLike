@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, CalendarOff } from "lucide-react";
+import { CalendarDays, CalendarOff, LogOut } from "lucide-react";
 
 import { getEmployeeContext } from "@/lib/auth/employee-context";
 import { logout } from "@/app/(auth)/actions";
@@ -26,42 +26,48 @@ export default async function EmployeeLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background">
-        <div className="mx-auto flex h-14 w-full max-w-4xl items-center gap-4 px-4">
-          <Link href="/mon-espace" className="font-bold text-primary">
+        <div className="mx-auto flex h-14 w-full max-w-4xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
+          <Link href="/mon-espace" className="shrink-0 font-bold text-primary">
             SkelloLike
           </Link>
-          <nav className="flex items-center gap-1 text-sm">
-            <Button variant="ghost" size="sm" asChild>
+          <nav className="flex items-center gap-0.5 text-sm sm:gap-1">
+            <Button variant="ghost" size="sm" asChild className="px-2 sm:px-3">
               <Link href="/mon-espace">
                 <CalendarDays className="size-4" />
-                Mon planning
+                <span className="hidden sm:inline">Mon planning</span>
               </Link>
             </Button>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="px-2 sm:px-3">
               <Link href="/mon-espace/absences">
                 <CalendarOff className="size-4" />
-                Mes absences
+                <span className="hidden sm:inline">Mes absences</span>
               </Link>
             </Button>
           </nav>
-          <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <span className="hidden text-sm text-muted-foreground md:inline">
               {ctx.orgName}
             </span>
-            <Avatar className="size-8">
+            <Avatar className="size-8 shrink-0">
               <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                 {initials(ctx.fullName)}
               </AvatarFallback>
             </Avatar>
             <form action={logout}>
-              <Button variant="outline" size="sm" type="submit">
-                Déconnexion
+              <Button
+                variant="outline"
+                size="sm"
+                type="submit"
+                className="px-2 sm:px-3"
+              >
+                <LogOut className="size-4 sm:hidden" />
+                <span className="hidden sm:inline">Déconnexion</span>
               </Button>
             </form>
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-3 py-5 sm:px-4 sm:py-6">
         {children}
       </main>
     </div>

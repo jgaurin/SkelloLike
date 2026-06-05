@@ -99,7 +99,7 @@ export function PlanningToolbar({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 border-b bg-background px-6 py-3">
+    <div className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-3 sm:gap-3 sm:px-6">
       {locations.length > 1 && (
         <Select value={locationId} onValueChange={(v) => go({ site: v })}>
           <SelectTrigger className="w-48">
