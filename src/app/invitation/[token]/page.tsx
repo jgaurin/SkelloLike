@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
+
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { AcceptForm } from "./accept-form";
 
 export default async function InvitationPage({
@@ -7,6 +10,18 @@ export default async function InvitationPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+
+  // Si l'utilisateur est déjà connecté (ex : invitation déjà acceptée puis
+  // rouverte), on l'envoie directement à son espace plutôt que d'afficher
+  // "invitation invalide".
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    redirect("/");
+  }
+
   const admin = createAdminClient();
 
   const { data: invite } = await admin

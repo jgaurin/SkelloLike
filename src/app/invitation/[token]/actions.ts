@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,10 +89,17 @@ export async function acceptInvitation(
 
   // Connecte immédiatement l'employé.
   const supabase = await createClient();
-  await supabase.auth.signInWithPassword({
+  const { error: signInErr } = await supabase.auth.signInWithPassword({
     email: invite.email,
     password,
   });
 
-  return { success: true };
+  // Si la connexion échoue (rare), on renvoie vers le login plutôt que de
+  // laisser l'employé sur une page d'invitation devenue "invalide".
+  if (signInErr) {
+    redirect("/login");
+  }
+
+  // Redirection côté serveur : la session est garantie posée.
+  redirect("/mon-espace");
 }

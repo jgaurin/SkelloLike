@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 
 import { acceptInvitation, type AcceptState } from "./actions";
@@ -22,17 +20,12 @@ export function AcceptForm({
   defaultFirstName: string;
   defaultLastName: string;
 }) {
-  const router = useRouter();
+  // L'action redirige côté serveur en cas de succès ; on ne gère ici que les
+  // erreurs renvoyées (état conservé).
   const [state, formAction, pending] = useActionState(
     acceptInvitation,
     initialState,
   );
-
-  useEffect(() => {
-    if (state.success) {
-      router.push("/mon-espace");
-    }
-  }, [state.success, router]);
 
   return (
     <form action={formAction} className="space-y-4">
