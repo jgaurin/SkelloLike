@@ -41,6 +41,8 @@ export function PlanningToolbar({
   weekStart,
   rangeLabel,
   templates,
+  teams,
+  selectedTeam,
   status,
   blockingCount,
   canManage,
@@ -52,6 +54,8 @@ export function PlanningToolbar({
   weekStart: string;
   rangeLabel: string;
   templates: { id: string; name: string }[];
+  teams: { id: string; name: string }[];
+  selectedTeam: string | null;
   status: "draft" | "published" | "partial";
   blockingCount: number;
   canManage: boolean;
@@ -61,11 +65,20 @@ export function PlanningToolbar({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  const go = (opts: { site?: string; date?: string; view?: string }) => {
+  const ALL_TEAMS = "__all__";
+
+  const go = (opts: {
+    site?: string;
+    date?: string;
+    view?: string;
+    team?: string | null;
+  }) => {
     const site = opts.site ?? locationId;
     const date = opts.date ?? anchor;
     const v = opts.view ?? view;
-    router.push(`/planning?site=${site}&view=${v}&date=${date}`);
+    const team = opts.team === undefined ? selectedTeam : opts.team;
+    const teamParam = team ? `&team=${team}` : "";
+    router.push(`/planning?site=${site}&view=${v}&date=${date}${teamParam}`);
   };
 
   const prev = () =>
@@ -109,6 +122,26 @@ export function PlanningToolbar({
             {locations.map((l) => (
               <SelectItem key={l.id} value={l.id}>
                 {l.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+
+      {/* Filtre par équipe */}
+      {teams.length > 0 && (
+        <Select
+          value={selectedTeam ?? ALL_TEAMS}
+          onValueChange={(v) => go({ team: v === ALL_TEAMS ? null : v })}
+        >
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_TEAMS}>Toutes les équipes</SelectItem>
+            {teams.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.name}
               </SelectItem>
             ))}
           </SelectContent>

@@ -28,7 +28,12 @@ const MANAGER_ROLES = [
 export default async function PlanningPage({
   searchParams,
 }: {
-  searchParams: Promise<{ site?: string; date?: string; view?: string }>;
+  searchParams: Promise<{
+    site?: string;
+    date?: string;
+    view?: string;
+    team?: string;
+  }>;
 }) {
   const ctx = await getAppContext();
   const supabase = await createClient();
@@ -76,12 +81,14 @@ export default async function PlanningPage({
   // Jours fériés français tombant dans la plage affichée.
   const holidays = Array.from(holidaysInRange(range.from, range.to).entries());
 
-  // Employés actifs + postes + contrats + postes occupables.
+  // Employés actifs + postes + contrats + postes occupables + équipes.
   const [
-    { data: employees },
+    { data: allEmployees },
     { data: positions },
     { data: contracts },
     { data: empPositions },
+    { data: teamRows },
+    { data: teamMembers },
   ] = await Promise.all([
     supabase
       .from("employees")
@@ -94,7 +101,27 @@ export default async function PlanningPage({
       .select("employee_id, weekly_hours, start_date")
       .order("start_date", { ascending: false }),
     supabase.from("employee_positions").select("employee_id, position_id"),
+    // Équipes de l'établissement courant (pour le filtre).
+    supabase
+      .from("teams")
+      .select("id, name")
+      .eq("location_id", locationId)
+      .order("name"),
+    supabase.from("employee_teams").select("team_id, employee_id"),
   ]);
+
+  // Filtre par équipe : si une équipe est sélectionnée et valide, on ne garde
+  // que ses membres ; sinon on affiche tout l'effectif.
+  const teams = teamRows ?? [];
+  const selectedTeam = teams.find((t) => t.id === params.team)?.id ?? null;
+  const teamMemberIds = new Set(
+    (teamMembers ?? [])
+      .filter((m) => m.team_id === selectedTeam)
+      .map((m) => m.employee_id),
+  );
+  const employees = selectedTeam
+    ? (allEmployees ?? []).filter((e) => teamMemberIds.has(e.id))
+    : (allEmployees ?? []);
 
   // Heures contractuelles : on garde le contrat le plus récent par employé.
   const contractHours = new Map<string, number>();
@@ -205,6 +232,8 @@ export default async function PlanningPage({
         rangeLabel={range.label}
         days={weekDates(weekStart)}
         employees={employees ?? []}
+        teams={teams}
+        selectedTeam={selectedTeam}
         positions={positions ?? []}
         shifts={shifts}
         absences={absences}

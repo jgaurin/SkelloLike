@@ -53,6 +53,8 @@ export function PlanningBoard({
   rangeLabel,
   days,
   employees,
+  teams,
+  selectedTeam,
   positions,
   shifts,
   absences,
@@ -73,6 +75,8 @@ export function PlanningBoard({
   rangeLabel: string;
   days: string[];
   employees: Employee[];
+  teams: { id: string; name: string }[];
+  selectedTeam: string | null;
   positions: Position[];
   shifts: Shift[];
   absences: { employee_id: string; date: string; name: string; color: string }[];
@@ -683,6 +687,8 @@ export function PlanningBoard({
         weekStart={weekStart}
         rangeLabel={rangeLabel}
         templates={templates}
+        teams={teams}
+        selectedTeam={selectedTeam}
         status={status}
         blockingCount={alerts.blockingTotal}
         canManage={canManage}
