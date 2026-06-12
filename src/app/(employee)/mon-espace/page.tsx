@@ -1,47 +1,45 @@
-import { CalendarDays } from "lucide-react";
-
 import { createClient } from "@/lib/supabase/server";
 import { getEmployeeContext } from "@/lib/auth/employee-context";
 import {
   getMonday,
   weekDates,
-  shiftWeek,
-  formatWeekRange,
-  WEEKDAYS,
-  isToday,
   trimSeconds,
   shiftHours,
-  fromISODate,
+  toISODate,
 } from "@/lib/week";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MyShiftsView } from "./my-shifts-view";
+import { TeamDayView, type TeamShift } from "./team-day-view";
 
-export default async function MonPlanningPage({
+export default async function MonEspacePage({
   searchParams,
 }: {
-  searchParams: Promise<{ week?: string }>;
+  searchParams: Promise<{ tab?: string; week?: string; day?: string }>;
 }) {
   const ctx = await getEmployeeContext();
   const supabase = await createClient();
   const params = await searchParams;
 
-  const weekStart = params.week ? getMonday(new Date(params.week)) : getMonday();
-  const days = weekDates(weekStart);
+  const tab = params.tab === "equipe" ? "equipe" : "mes-shifts";
 
-  // Shifts publiés de la semaine pour cet employé + ses collègues (même org,
-  // plannings publiés). On ne montre que les semaines publiées.
+  // ── Onglet "Mes shifts" : semaine ───────────────────────────────────────
+  const weekStart = params.week ? getMonday(new Date(params.week)) : getMonday();
+  const weekDays = weekDates(weekStart);
+
+  // ── Onglet "Toute l'équipe" : jour ──────────────────────────────────────
+  const day = params.day ?? toISODate(new Date());
+
+  // Une seule requête couvrant la semaine ET le jour affiché (shifts publiés).
+  const from = weekDays[0] < day ? weekDays[0] : day;
+  const to = weekDays[6] > day ? weekDays[6] : day;
+
   const { data: shiftRows } = await supabase
     .from("shifts")
     .select(
-      "id, employee_id, shift_date, start_time, end_time, break_minutes, position_id, status, positions(name, color), employees(first_name, last_name), schedules!inner(status)",
+      "id, employee_id, shift_date, start_time, end_time, break_minutes, positions(name, color), employees(first_name, last_name), schedules!inner(status)",
     )
-    .gte("shift_date", days[0])
-    .lte("shift_date", days[6])
+    .gte("shift_date", from)
+    .lte("shift_date", to)
     .eq("status", "published");
 
   type Row = {
@@ -72,110 +70,69 @@ export default async function MonPlanningPage({
     isMine: s.employee_id === ctx.employeeId,
   }));
 
-  const myHours = rows
-    .filter((r) => r.isMine)
-    .reduce((sum, r) => sum + shiftHours(r.start, r.end, r.breakMin), 0);
+  // Données "Mes shifts" (semaine, à moi).
+  const myWeekShifts = rows
+    .filter((r) => r.isMine && weekDays.includes(r.shift_date))
+    .map((r) => ({
+      id: r.id,
+      date: r.shift_date,
+      start: r.start,
+      end: r.end,
+      posName: r.posName,
+      posColor: r.posColor,
+      hours: shiftHours(r.start, r.end, r.breakMin),
+    }));
 
-  const byDay = new Map<string, Row[]>();
-  for (const r of rows) {
-    const arr = byDay.get(r.shift_date) ?? [];
-    arr.push(r);
-    byDay.set(r.shift_date, arr);
-  }
+  const myWeekHours = myWeekShifts.reduce((s, x) => s + x.hours, 0);
+
+  // Données "Toute l'équipe" (jour donné).
+  const teamDayShifts: TeamShift[] = rows
+    .filter((r) => r.shift_date === day)
+    .map((r) => ({
+      id: r.id,
+      start: r.start,
+      end: r.end,
+      empName: r.empName,
+      posName: r.posName,
+      posColor: r.posColor,
+      isMine: r.isMine,
+    }))
+    .sort((a, b) => a.start.localeCompare(b.start));
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Mon planning</h1>
-          <p className="text-sm text-muted-foreground">
-            Bonjour {ctx.fullName.split(" ")[0]} · {myHours.toFixed(0)}h cette
-            semaine
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/mon-espace?week=${shiftWeek(weekStart, -1)}`}>Précédente</a>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <a href="/mon-espace">Cette semaine</a>
-          </Button>
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/mon-espace?week=${shiftWeek(weekStart, 1)}`}>Suivante</a>
-          </Button>
-        </div>
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">
+          Bonjour {ctx.fullName.split(" ")[0]} 👋
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Votre planning chez {ctx.orgName}.
+        </p>
       </div>
 
-      <p className="text-sm font-medium capitalize">
-        {formatWeekRange(weekStart)}
-      </p>
+      <Tabs defaultValue={tab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="mes-shifts" asChild>
+            <a href="/mon-espace?tab=mes-shifts">Mes shifts</a>
+          </TabsTrigger>
+          <TabsTrigger value="equipe" asChild>
+            <a href="/mon-espace?tab=equipe">Toute l&apos;équipe</a>
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="space-y-3">
-        {days.map((d, i) => {
-          const dayRows = (byDay.get(d) ?? []).sort((a, b) =>
-            a.start.localeCompare(b.start),
-          );
-          const mine = dayRows.filter((r) => r.isMine);
-          const others = dayRows.filter((r) => !r.isMine);
-          return (
-            <Card
-              key={d}
-              className={isToday(d) ? "border-primary/40" : undefined}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center justify-between text-base">
-                  <span className="capitalize">
-                    {WEEKDAYS[i]} {fromISODate(d).getDate()}
-                  </span>
-                  {isToday(d) && (
-                    <span className="text-xs font-normal text-primary">
-                      Aujourd&apos;hui
-                    </span>
-                  )}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {mine.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Repos</p>
-                ) : (
-                  mine.map((r) => (
-                    <div
-                      key={r.id}
-                      className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white"
-                      style={{ backgroundColor: r.posColor ?? "#059669" }}
-                    >
-                      <CalendarDays className="size-4" />
-                      {r.start} – {r.end}
-                      {r.posName && (
-                        <span className="opacity-90">· {r.posName}</span>
-                      )}
-                    </div>
-                  ))
-                )}
+        <TabsContent value="mes-shifts" className="mt-4">
+          <MyShiftsView
+            weekStart={weekStart}
+            days={weekDays}
+            shifts={myWeekShifts}
+            totalHours={myWeekHours}
+          />
+        </TabsContent>
 
-                {others.length > 0 && (
-                  <div className="pt-1">
-                    <p className="mb-1 text-xs font-medium text-muted-foreground">
-                      Avec vous ce jour-là
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {others.map((r) => (
-                        <span
-                          key={r.id}
-                          className="rounded-full border px-2 py-0.5 text-xs"
-                          title={`${r.start} – ${r.end}`}
-                        >
-                          {r.empName} ({r.start}–{r.end})
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+        <TabsContent value="equipe" className="mt-4">
+          <TeamDayView day={day} shifts={teamDayShifts} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
