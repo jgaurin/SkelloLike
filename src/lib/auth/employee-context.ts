@@ -25,6 +25,7 @@ export async function getEmployeeContext(): Promise<EmployeeContext> {
   const { data: membership } = await supabase
     .from("memberships")
     .select("org_id, role, organizations(name)")
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
 

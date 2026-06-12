@@ -21,6 +21,7 @@ export default async function HomePage() {
   const { data: membership } = await supabase
     .from("memberships")
     .select("org_id, role")
+    .eq("user_id", user.id)
     .limit(1)
     .maybeSingle();
 

@@ -33,6 +33,7 @@ export async function getAppContext(): Promise<AppContext> {
     supabase
       .from("memberships")
       .select("org_id, role, organizations(name)")
+      .eq("user_id", user.id)
       .limit(1)
       .maybeSingle(),
     supabase
