@@ -1,16 +1,22 @@
-import { Users } from "lucide-react";
+import { Users, Moon } from "lucide-react";
 
 import { shiftDay, fromISODate, isToday, toISODate } from "@/lib/week";
 import { Button } from "@/components/ui/button";
 
 export type TeamShift = {
-  id: string;
-  start: string;
-  end: string;
-  empName: string;
-  posName: string | null;
-  posColor: string | null;
+  employeeId: string;
+  name: string;
   isMine: boolean;
+  status: "working" | "off" | "absence";
+  shifts: {
+    id: string;
+    start: string;
+    end: string;
+    posName: string | null;
+    posColor: string | null;
+  }[];
+  absenceName: string | null;
+  absenceColor: string | null;
 };
 
 function formatDay(iso: string) {
@@ -23,11 +29,14 @@ function formatDay(iso: string) {
 
 export function TeamDayView({
   day,
-  shifts,
+  roster,
 }: {
   day: string;
-  shifts: TeamShift[];
+  roster: TeamShift[];
 }) {
+  const working = roster.filter((r) => r.status === "working").length;
+  const absent = roster.filter((r) => r.status === "absence").length;
+
   return (
     <div className="space-y-3">
       {/* Navigation jour par jour */}
@@ -45,7 +54,8 @@ export function TeamDayView({
             {formatDay(day)}
           </p>
           <p className="text-xs text-muted-foreground">
-            {shifts.length} personne{shifts.length > 1 ? "s" : ""} ce jour-là
+            {working} au travail
+            {absent > 0 ? ` · ${absent} absent${absent > 1 ? "s" : ""}` : ""}
           </p>
         </div>
         <Button variant="outline" size="icon" className="size-9 shrink-0" asChild>
@@ -68,46 +78,83 @@ export function TeamDayView({
         </div>
       )}
 
-      {/* Liste des shifts du jour (tout le monde) */}
-      {shifts.length === 0 ? (
+      {roster.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center">
           <Users className="size-9 text-muted-foreground/40" />
           <p className="mt-3 text-sm text-muted-foreground">
-            Personne n&apos;est planifié ce jour-là.
+            Aucun employé.
           </p>
         </div>
       ) : (
         <div className="space-y-2">
-          {shifts.map((s) => (
+          {roster.map((r) => (
             <div
-              key={s.id}
+              key={r.employeeId}
               className={`flex items-center gap-3 rounded-lg border p-3 ${
-                s.isMine ? "border-primary/40 bg-primary/5" : ""
-              }`}
+                r.isMine ? "border-primary/40 bg-primary/5" : ""
+              } ${r.status === "off" ? "opacity-70" : ""}`}
             >
-              {/* Barre de couleur du poste */}
+              {/* Barre de couleur : poste si au travail, type d'absence sinon */}
               <span
                 className="h-9 w-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: s.posColor ?? "#94A3B8" }}
+                style={{
+                  backgroundColor:
+                    r.status === "working"
+                      ? (r.shifts[0]?.posColor ?? "#94A3B8")
+                      : r.status === "absence"
+                        ? (r.absenceColor ?? "#94A3B8")
+                        : "#CBD5E1",
+                }}
               />
+
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">
-                  {s.empName}
-                  {s.isMine && (
+                  {r.name}
+                  {r.isMine && (
                     <span className="ml-1.5 text-xs font-normal text-primary">
                       (vous)
                     </span>
                   )}
                 </p>
-                {s.posName && (
+
+                {r.status === "working" && r.shifts[0]?.posName && (
                   <p className="truncate text-xs text-muted-foreground">
-                    {s.posName}
+                    {r.shifts.map((s) => s.posName).filter(Boolean).join(" · ")}
+                  </p>
+                )}
+                {r.status === "absence" && (
+                  <p
+                    className="truncate text-xs font-medium"
+                    style={{ color: r.absenceColor ?? undefined }}
+                  >
+                    {r.absenceName}
+                  </p>
+                )}
+                {r.status === "off" && (
+                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Moon className="size-3" />
+                    En repos
                   </p>
                 )}
               </div>
-              <span className="shrink-0 text-sm font-medium tabular-nums">
-                {s.start} – {s.end}
-              </span>
+
+              {/* Horaires (à droite) */}
+              <div className="shrink-0 text-right">
+                {r.status === "working" ? (
+                  <div className="space-y-0.5">
+                    {r.shifts.map((s) => (
+                      <p
+                        key={s.id}
+                        className="text-sm font-medium tabular-nums"
+                      >
+                        {s.start} – {s.end}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs text-muted-foreground">—</span>
+                )}
+              </div>
             </div>
           ))}
         </div>

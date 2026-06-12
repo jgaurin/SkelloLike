@@ -33,14 +33,30 @@ export default async function MonEspacePage({
   const from = weekDays[0] < day ? weekDays[0] : day;
   const to = weekDays[6] > day ? weekDays[6] : day;
 
-  const { data: shiftRows } = await supabase
-    .from("shifts")
-    .select(
-      "id, employee_id, shift_date, start_time, end_time, break_minutes, positions(name, color), employees(first_name, last_name), schedules!inner(status)",
-    )
-    .gte("shift_date", from)
-    .lte("shift_date", to)
-    .eq("status", "published");
+  const [{ data: shiftRows }, { data: allEmployees }, { data: dayAbsences }] =
+    await Promise.all([
+      supabase
+        .from("shifts")
+        .select(
+          "id, employee_id, shift_date, start_time, end_time, break_minutes, positions(name, color), employees(first_name, last_name), schedules!inner(status)",
+        )
+        .gte("shift_date", from)
+        .lte("shift_date", to)
+        .eq("status", "published"),
+      // Tout l'effectif actif (pour afficher aussi les absents/repos).
+      supabase
+        .from("employees")
+        .select("id, first_name, last_name")
+        .eq("status", "active")
+        .order("last_name"),
+      // Absences validées couvrant le jour affiché.
+      supabase
+        .from("absence_requests")
+        .select("employee_id, absence_types(name, color)")
+        .eq("status", "approved")
+        .lte("start_date", day)
+        .gte("end_date", day),
+    ]);
 
   type Row = {
     id: string;
@@ -85,19 +101,60 @@ export default async function MonEspacePage({
 
   const myWeekHours = myWeekShifts.reduce((s, x) => s + x.hours, 0);
 
-  // Données "Toute l'équipe" (jour donné).
-  const teamDayShifts: TeamShift[] = rows
-    .filter((r) => r.shift_date === day)
-    .map((r) => ({
-      id: r.id,
-      start: r.start,
-      end: r.end,
-      empName: r.empName,
-      posName: r.posName,
-      posColor: r.posColor,
-      isMine: r.isMine,
-    }))
-    .sort((a, b) => a.start.localeCompare(b.start));
+  // ── Données "Toute l'équipe" : chaque employé avec son statut du jour ────
+  // Shifts du jour indexés par employé.
+  const shiftsByEmp = new Map<string, typeof rows>();
+  for (const r of rows) {
+    if (r.shift_date !== day || !r.employee_id) continue;
+    const arr = shiftsByEmp.get(r.employee_id) ?? [];
+    arr.push(r);
+    shiftsByEmp.set(r.employee_id, arr);
+  }
+
+  // Absences du jour indexées par employé.
+  const absenceByEmp = new Map<string, { name: string; color: string }>();
+  for (const a of dayAbsences ?? []) {
+    if (!a.employee_id) continue;
+    absenceByEmp.set(a.employee_id, {
+      name: a.absence_types?.name ?? "Absence",
+      color: a.absence_types?.color ?? "#94A3B8",
+    });
+  }
+
+  const teamRoster: TeamShift[] = (allEmployees ?? []).map((e) => {
+    const empShifts = (shiftsByEmp.get(e.id) ?? []).sort((a, b) =>
+      a.start.localeCompare(b.start),
+    );
+    const absence = absenceByEmp.get(e.id);
+    const status: TeamShift["status"] =
+      empShifts.length > 0 ? "working" : absence ? "absence" : "off";
+
+    return {
+      employeeId: e.id,
+      name: `${e.first_name} ${e.last_name}`,
+      isMine: e.id === ctx.employeeId,
+      status,
+      shifts: empShifts.map((s) => ({
+        id: s.id,
+        start: s.start,
+        end: s.end,
+        posName: s.posName,
+        posColor: s.posColor,
+      })),
+      absenceName: absence?.name ?? null,
+      absenceColor: absence?.color ?? null,
+    };
+  });
+
+  // Tri : ceux qui travaillent d'abord, puis absents, puis repos ; moi en tête.
+  const statusOrder = { working: 0, absence: 1, off: 2 } as const;
+  teamRoster.sort((a, b) => {
+    if (a.isMine !== b.isMine) return a.isMine ? -1 : 1;
+    if (statusOrder[a.status] !== statusOrder[b.status]) {
+      return statusOrder[a.status] - statusOrder[b.status];
+    }
+    return a.name.localeCompare(b.name);
+  });
 
   return (
     <div className="space-y-4">
@@ -130,7 +187,7 @@ export default async function MonEspacePage({
         </TabsContent>
 
         <TabsContent value="equipe" className="mt-4">
-          <TeamDayView day={day} shifts={teamDayShifts} />
+          <TeamDayView day={day} roster={teamRoster} />
         </TabsContent>
       </Tabs>
     </div>
