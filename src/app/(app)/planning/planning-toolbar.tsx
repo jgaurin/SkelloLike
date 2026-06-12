@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Location = { id: string; name: string };
 
 const VIEW_LABELS: Record<PlanningView, string> = {
   day: "Jour",
@@ -35,7 +34,6 @@ const VIEW_LABELS: Record<PlanningView, string> = {
 
 export function PlanningToolbar({
   view,
-  locations,
   locationId,
   anchor,
   weekStart,
@@ -48,7 +46,6 @@ export function PlanningToolbar({
   canManage,
 }: {
   view: PlanningView;
-  locations: Location[];
   locationId: string;
   anchor: string;
   weekStart: string;
@@ -67,18 +64,13 @@ export function PlanningToolbar({
 
   const ALL_TEAMS = "__all__";
 
-  const go = (opts: {
-    site?: string;
-    date?: string;
-    view?: string;
-    team?: string | null;
-  }) => {
-    const site = opts.site ?? locationId;
+  // L'établissement est géré globalement (sidebar) ; on ne le passe plus en URL.
+  const go = (opts: { date?: string; view?: string; team?: string | null }) => {
     const date = opts.date ?? anchor;
     const v = opts.view ?? view;
     const team = opts.team === undefined ? selectedTeam : opts.team;
     const teamParam = team ? `&team=${team}` : "";
-    router.push(`/planning?site=${site}&view=${v}&date=${date}${teamParam}`);
+    router.push(`/planning?view=${v}&date=${date}${teamParam}`);
   };
 
   const prev = () =>
@@ -113,21 +105,6 @@ export function PlanningToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-3 sm:gap-3 sm:px-6">
-      {locations.length > 1 && (
-        <Select value={locationId} onValueChange={(v) => go({ site: v })}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {locations.map((l) => (
-              <SelectItem key={l.id} value={l.id}>
-                {l.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
       {/* Filtre par équipe */}
       {teams.length > 0 && (
         <Select

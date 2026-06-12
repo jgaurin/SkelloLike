@@ -13,6 +13,7 @@ import {
   Building2,
 } from "lucide-react";
 
+import { LocationSwitcher } from "@/components/layout/location-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -46,7 +47,15 @@ const manageNav: NavItem[] = [
   { label: "Paramètres", href: "/parametres", icon: Settings },
 ];
 
-export function AppSidebar({ orgName }: { orgName: string }) {
+export function AppSidebar({
+  orgName,
+  locations,
+  currentLocationId,
+}: {
+  orgName: string;
+  locations: { id: string; name: string }[];
+  currentLocationId: string;
+}) {
   const pathname = usePathname();
 
   const isActive = (href: string) =>
@@ -77,6 +86,13 @@ export function AppSidebar({ orgName }: { orgName: string }) {
               SkelloLike
             </span>
           </div>
+        </div>
+        {/* Sélecteur d'établissement global */}
+        <div className="px-2 pb-1 group-data-[collapsible=icon]:hidden">
+          <LocationSwitcher
+            locations={locations}
+            currentId={currentLocationId}
+          />
         </div>
       </SidebarHeader>
 

@@ -17,6 +17,7 @@ import {
 import { PlanningBoard } from "./planning-board";
 import { parseBreakRules } from "@/lib/breaks";
 import { holidaysInRange } from "@/lib/holidays";
+import { getLocationContext } from "@/lib/auth/location-context";
 
 const MANAGER_ROLES = [
   "org_owner",
@@ -29,7 +30,6 @@ export default async function PlanningPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    site?: string;
     date?: string;
     view?: string;
     team?: string;
@@ -62,8 +62,10 @@ export default async function PlanningPage({
     );
   }
 
+  // L'établissement courant vient du sélecteur global de la sidebar (cookie).
+  const { currentId } = await getLocationContext();
   const selectedLocation =
-    locations.find((l) => l.id === params.site) ?? locations[0];
+    locations.find((l) => l.id === currentId) ?? locations[0];
   const locationId = selectedLocation.id;
   const breakRules = parseBreakRules(selectedLocation.break_rules);
 

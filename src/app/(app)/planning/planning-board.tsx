@@ -681,7 +681,6 @@ export function PlanningBoard({
     <div className="flex flex-1 flex-col overflow-hidden">
       <PlanningToolbar
         view={view}
-        locations={locations}
         locationId={locationId}
         anchor={anchor}
         weekStart={weekStart}

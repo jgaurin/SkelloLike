@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { getLocationContext } from "@/lib/auth/location-context";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 
@@ -35,10 +36,15 @@ export default async function AppLayout({
   }
 
   const orgName = membership.organizations?.name ?? "Mon entreprise";
+  const loc = await getLocationContext();
 
   return (
     <SidebarProvider>
-      <AppSidebar orgName={orgName} />
+      <AppSidebar
+        orgName={orgName}
+        locations={loc.locations}
+        currentLocationId={loc.currentId}
+      />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );
