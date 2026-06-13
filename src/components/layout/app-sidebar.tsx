@@ -10,7 +10,6 @@ import {
   FileText,
   BarChart3,
   Settings,
-  Building2,
 } from "lucide-react";
 
 import { LocationSwitcher } from "@/components/layout/location-switcher";
@@ -43,7 +42,6 @@ const mainNav: NavItem[] = [
 const manageNav: NavItem[] = [
   { label: "Documents", href: "/documents", icon: FileText },
   { label: "Rapports", href: "/rapports", icon: BarChart3 },
-  { label: "Établissements", href: "/etablissements", icon: Building2 },
   { label: "Paramètres", href: "/parametres", icon: Settings },
 ];
 
