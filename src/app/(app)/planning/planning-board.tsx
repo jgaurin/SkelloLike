@@ -564,9 +564,13 @@ export function PlanningBoard({
     employees.map((e) => [e.id, `${e.first_name} ${e.last_name}`]),
   );
   // Index : "positionId|date" -> shifts.
+  // On ne garde que les shifts des employés affichés (filtre équipe + site),
+  // plus les shifts non assignés.
+  const visibleEmpIds = new Set(employees.map((e) => e.id));
   const byPosCell = new Map<string, Shift[]>();
   const usedPositionIds = new Set<string>();
   for (const s of localShifts) {
+    if (s.employee_id && !visibleEmpIds.has(s.employee_id)) continue;
     const pid = s.position_id ?? "none";
     usedPositionIds.add(pid);
     const key = `${pid}|${s.shift_date}`;
