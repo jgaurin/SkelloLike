@@ -13,6 +13,7 @@ import { ContractsPanel } from "./contracts-panel";
 import { PositionsPanel } from "./positions-panel";
 import { LocationsPanel } from "./locations-panel";
 import { DocumentsPanel } from "./documents-panel";
+import { PinPanel } from "./pin-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +43,7 @@ export default async function EmployeeDetailPage({
   const { data: employee } = await supabase
     .from("employees")
     .select(
-      "id, first_name, last_name, email, phone, employee_number, hire_date, status, user_id",
+      "id, first_name, last_name, email, phone, employee_number, hire_date, status, user_id, pin_code",
     )
     .eq("id", id)
     .maybeSingle();
@@ -200,6 +201,22 @@ export default async function EmployeeDetailPage({
                 allLocations={allLocations ?? []}
                 primaryId={primaryLocationId}
                 otherIds={otherLocationIds}
+                canManage={canManage}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-base">Pointage (badgeuse)</CardTitle>
+              <CardDescription>
+                Code PIN que l&apos;employé saisit sur la badgeuse.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PinPanel
+                employeeId={employee.id}
+                initialPin={employee.pin_code}
                 canManage={canManage}
               />
             </CardContent>

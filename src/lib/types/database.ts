@@ -400,6 +400,7 @@ export type Database = {
           last_name: string
           org_id: string
           phone: string | null
+          pin_code: string | null
           status: Database["public"]["Enums"]["employee_status"]
           updated_at: string
           user_id: string | null
@@ -416,6 +417,7 @@ export type Database = {
           last_name: string
           org_id: string
           phone?: string | null
+          pin_code?: string | null
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
           user_id?: string | null
@@ -432,6 +434,7 @@ export type Database = {
           last_name?: string
           org_id?: string
           phone?: string | null
+          pin_code?: string | null
           status?: Database["public"]["Enums"]["employee_status"]
           updated_at?: string
           user_id?: string | null
@@ -1018,6 +1021,58 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "schedule_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      timeclocks: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          location_id: string
+          org_id: string
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          location_id: string
+          org_id: string
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          location_id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timeclocks_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timeclocks_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timeclocks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
