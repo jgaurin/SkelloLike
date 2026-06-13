@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
+import { getLocationContext } from "@/lib/auth/location-context";
 
 export type EmployeeFormState = {
   error?: string;
@@ -45,19 +46,33 @@ export async function createEmployee(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("employees").insert({
-    org_id: ctx.orgId,
-    first_name: firstName,
-    last_name: lastName,
-    email,
-    phone,
-    employee_number: employeeNumber,
-    hire_date: hireDate,
-    status: "active",
-  });
+  const { data: created, error } = await supabase
+    .from("employees")
+    .insert({
+      org_id: ctx.orgId,
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      employee_number: employeeNumber,
+      hire_date: hireDate,
+      status: "active",
+    })
+    .select("id")
+    .single();
 
-  if (error) {
+  if (error || !created) {
     return { error: "Impossible de créer l'employé. Réessayez." };
+  }
+
+  // Rattache le nouvel employé à l'établissement courant comme site principal.
+  const { currentId } = await getLocationContext();
+  if (currentId) {
+    await supabase.from("employee_locations").insert({
+      employee_id: created.id,
+      location_id: currentId,
+      is_primary: true,
+    });
   }
 
   revalidatePath("/employes");

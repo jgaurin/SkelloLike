@@ -11,6 +11,7 @@ import { EmployeeActions } from "./employee-actions";
 import { InviteButton } from "./invite-button";
 import { ContractsPanel } from "./contracts-panel";
 import { PositionsPanel } from "./positions-panel";
+import { LocationsPanel } from "./locations-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,21 +50,39 @@ export default async function EmployeeDetailPage({
     notFound();
   }
 
-  const [{ data: contracts }, { data: positions }, { data: assigned }] =
-    await Promise.all([
-      supabase
-        .from("contracts")
-        .select("id, type, start_date, end_date, weekly_hours, hourly_rate")
-        .eq("employee_id", id)
-        .order("start_date", { ascending: false }),
-      supabase.from("positions").select("id, name, color").order("name"),
-      supabase
-        .from("employee_positions")
-        .select("position_id")
-        .eq("employee_id", id),
-    ]);
+  const [
+    { data: contracts },
+    { data: positions },
+    { data: assigned },
+    { data: allLocations },
+    { data: empLocations },
+  ] = await Promise.all([
+    supabase
+      .from("contracts")
+      .select("id, type, start_date, end_date, weekly_hours, hourly_rate")
+      .eq("employee_id", id)
+      .order("start_date", { ascending: false }),
+    supabase.from("positions").select("id, name, color").order("name"),
+    supabase
+      .from("employee_positions")
+      .select("position_id")
+      .eq("employee_id", id),
+    supabase
+      .from("locations")
+      .select("id, name")
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("employee_locations")
+      .select("location_id, is_primary")
+      .eq("employee_id", id),
+  ]);
 
   const assignedIds = (assigned ?? []).map((a) => a.position_id);
+  const primaryLocationId =
+    (empLocations ?? []).find((l) => l.is_primary)?.location_id ?? null;
+  const otherLocationIds = (empLocations ?? [])
+    .filter((l) => !l.is_primary)
+    .map((l) => l.location_id);
 
   return (
     <>
@@ -155,6 +174,25 @@ export default async function EmployeeDetailPage({
                 employeeId={employee.id}
                 allPositions={positions ?? []}
                 assignedIds={assignedIds}
+                canManage={canManage}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-base">Établissements</CardTitle>
+              <CardDescription>
+                Le site principal de l&apos;employé et les autres où il peut
+                travailler (multi-sites).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LocationsPanel
+                employeeId={employee.id}
+                allLocations={allLocations ?? []}
+                primaryId={primaryLocationId}
+                otherIds={otherLocationIds}
                 canManage={canManage}
               />
             </CardContent>

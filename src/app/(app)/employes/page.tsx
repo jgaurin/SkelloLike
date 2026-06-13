@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
+import { getLocationContext } from "@/lib/auth/location-context";
 import { AppHeader } from "@/components/layout/app-header";
 import { EmployeeFormDialog } from "./employee-form-dialog";
 import { EmployeesTable } from "./employees-table";
@@ -17,10 +18,19 @@ export default async function EmployeesPage() {
   const ctx = await getAppContext();
   const supabase = await createClient();
   const canManage = MANAGER_ROLES.includes(ctx.role);
+  const { currentId, currentName } = await getLocationContext();
+
+  // Employés rattachés à l'établissement courant (principal ou prêté).
+  const { data: siteRows } = await supabase
+    .from("employee_locations")
+    .select("employee_id")
+    .eq("location_id", currentId);
+  const siteIds = (siteRows ?? []).map((r) => r.employee_id);
 
   const { data: employees } = await supabase
     .from("employees")
     .select("id, first_name, last_name, email, phone, employee_number, status, hire_date")
+    .in("id", siteIds.length ? siteIds : ["00000000-0000-0000-0000-000000000000"])
     .order("last_name", { ascending: true });
 
   return (
@@ -33,7 +43,7 @@ export default async function EmployeesPage() {
               {employees?.length ?? 0} employé{(employees?.length ?? 0) > 1 ? "s" : ""}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Gérez les fiches RH de {ctx.orgName}.
+              Fiches RH rattachées à {currentName}.
             </p>
           </div>
           <EmployeeFormDialog />

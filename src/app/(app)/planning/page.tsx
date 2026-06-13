@@ -91,6 +91,7 @@ export default async function PlanningPage({
     { data: empPositions },
     { data: teamRows },
     { data: teamMembers },
+    { data: siteEmployees },
   ] = await Promise.all([
     supabase
       .from("employees")
@@ -110,10 +111,23 @@ export default async function PlanningPage({
       .eq("location_id", locationId)
       .order("name"),
     supabase.from("employee_teams").select("team_id, employee_id"),
+    // Employés rattachés à l'établissement courant (principal ou prêté).
+    supabase
+      .from("employee_locations")
+      .select("employee_id")
+      .eq("location_id", locationId),
   ]);
 
+  // Multi-sites : ne garder que les employés rattachés à l'établissement courant.
+  const siteEmpIds = new Set(
+    (siteEmployees ?? []).map((s) => s.employee_id),
+  );
+  const locationEmployees = (allEmployees ?? []).filter((e) =>
+    siteEmpIds.has(e.id),
+  );
+
   // Filtre par équipe : si une équipe est sélectionnée et valide, on ne garde
-  // que ses membres ; sinon on affiche tout l'effectif.
+  // que ses membres ; sinon on affiche les employés du site.
   const teams = teamRows ?? [];
   const selectedTeam = teams.find((t) => t.id === params.team)?.id ?? null;
   const teamMemberIds = new Set(
@@ -122,8 +136,8 @@ export default async function PlanningPage({
       .map((m) => m.employee_id),
   );
   const employees = selectedTeam
-    ? (allEmployees ?? []).filter((e) => teamMemberIds.has(e.id))
-    : (allEmployees ?? []);
+    ? locationEmployees.filter((e) => teamMemberIds.has(e.id))
+    : locationEmployees;
 
   // Heures contractuelles : on garde le contrat le plus récent par employé.
   const contractHours = new Map<string, number>();

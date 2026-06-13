@@ -240,6 +240,39 @@ export type Database = {
           },
         ]
       }
+      employee_locations: {
+        Row: {
+          employee_id: string
+          location_id: string
+          is_primary: boolean
+        }
+        Insert: {
+          employee_id: string
+          location_id: string
+          is_primary?: boolean
+        }
+        Update: {
+          employee_id?: string
+          location_id?: string
+          is_primary?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_locations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_locations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_positions: {
         Row: {
           employee_id: string
