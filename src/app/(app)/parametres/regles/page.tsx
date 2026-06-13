@@ -17,7 +17,7 @@ export default async function RulesSettingsPage() {
   const { data: org } = await supabase
     .from("organizations")
     .select(
-      "collective_agreement, payroll_charge_rate, reference_days_per_week, meal_allowance_enabled, meal_allowance_amount",
+      "collective_agreement, payroll_charge_rate, reference_days_per_week, meal_allowance_enabled, meal_allowance_amount, night_premium_rate, night_start_hour, night_end_hour, sunday_premium_rate, holiday_premium_rate",
     )
     .eq("id", ctx.orgId)
     .single();
@@ -28,6 +28,11 @@ export default async function RulesSettingsPage() {
     reference_days_per_week: org?.reference_days_per_week ?? 5,
     meal_allowance_enabled: org?.meal_allowance_enabled ?? false,
     meal_allowance_amount: Number(org?.meal_allowance_amount ?? 0),
+    night_premium_rate: Number(org?.night_premium_rate ?? 0),
+    night_start_hour: org?.night_start_hour ?? 21,
+    night_end_hour: org?.night_end_hour ?? 6,
+    sunday_premium_rate: Number(org?.sunday_premium_rate ?? 0),
+    holiday_premium_rate: Number(org?.holiday_premium_rate ?? 0),
   };
 
   return (

@@ -23,6 +23,11 @@ export type OrgRules = {
   reference_days_per_week: number;
   meal_allowance_enabled: boolean;
   meal_allowance_amount: number;
+  night_premium_rate: number;
+  night_start_hour: number;
+  night_end_hour: number;
+  sunday_premium_rate: number;
+  holiday_premium_rate: number;
 };
 
 const initialState: RulesResult = { ok: false };
@@ -135,6 +140,82 @@ export function RulesForm({
               />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Majorations</CardTitle>
+          <CardDescription>
+            Taux de majoration des heures de nuit, dimanche et jours fériés
+            (apparaissent dans l&apos;export de pré-paie). 0 = pas de majoration.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="night_premium_rate">Heures de nuit (%)</Label>
+              <Input
+                id="night_premium_rate"
+                name="night_premium_rate"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={rules.night_premium_rate}
+                disabled={!canManage}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="night_start_hour">Nuit de (h)</Label>
+              <Input
+                id="night_start_hour"
+                name="night_start_hour"
+                type="number"
+                min="0"
+                max="23"
+                defaultValue={rules.night_start_hour}
+                disabled={!canManage}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="night_end_hour">à (h)</Label>
+              <Input
+                id="night_end_hour"
+                name="night_end_hour"
+                type="number"
+                min="0"
+                max="23"
+                defaultValue={rules.night_end_hour}
+                disabled={!canManage}
+              />
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="sunday_premium_rate">Dimanche (%)</Label>
+              <Input
+                id="sunday_premium_rate"
+                name="sunday_premium_rate"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={rules.sunday_premium_rate}
+                disabled={!canManage}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="holiday_premium_rate">Jours fériés (%)</Label>
+              <Input
+                id="holiday_premium_rate"
+                name="holiday_premium_rate"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={rules.holiday_premium_rate}
+                disabled={!canManage}
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 

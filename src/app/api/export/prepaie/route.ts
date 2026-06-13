@@ -94,7 +94,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from("organizations")
       .select(
-        "payroll_charge_rate, meal_allowance_enabled, meal_allowance_amount",
+        "payroll_charge_rate, meal_allowance_enabled, meal_allowance_amount, night_start_hour, night_end_hour, night_premium_rate, sunday_premium_rate, holiday_premium_rate",
       )
       .eq("id", ctx.orgId)
       .single(),
@@ -103,6 +103,9 @@ export async function GET(request: NextRequest) {
   const mealAmount =
     org?.meal_allowance_enabled ? Number(org.meal_allowance_amount) : 0;
   const chargeRate = Number(org?.payroll_charge_rate ?? 0);
+  const nightRate = Number(org?.night_premium_rate ?? 0);
+  const sundayRate = Number(org?.sunday_premium_rate ?? 0);
+  const holidayRate = Number(org?.holiday_premium_rate ?? 0);
 
   // Contrat le plus récent par employé (heures hebdo + taux horaire).
   const contractHours = new Map<string, number>();
@@ -132,13 +135,21 @@ export async function GET(request: NextRequest) {
     })),
     holidays: new Set(holidaysInRange(start, end).keys()),
     mealAmount,
+    nightStartHour: Number(org?.night_start_hour ?? 21),
+    nightEndHour: Number(org?.night_end_hour ?? 6),
     monthStart: start,
     monthEnd: end,
   });
 
   // ── Définition des colonnes, groupées par section ────────────────────────
   // Chaque colonne : libellé, section (pour la couleur), accès à la valeur.
-  type Section = "id" | "work" | "overtime" | "absence" | "payroll";
+  type Section =
+    | "id"
+    | "work"
+    | "overtime"
+    | "premium"
+    | "absence"
+    | "payroll";
   type Col = {
     header: string;
     section: Section;
@@ -190,6 +201,32 @@ export async function GET(request: NextRequest) {
     ),
   ];
 
+  // Heures majorées (n'apparaissent que si le taux correspondant est défini).
+  if (nightRate > 0) {
+    columns.push({
+      header: `H. nuit\n(+${nightRate}%)`,
+      section: "premium",
+      width: 10,
+      value: (r) => r.nightHours,
+    });
+  }
+  if (sundayRate > 0) {
+    columns.push({
+      header: `H. dim.\n(+${sundayRate}%)`,
+      section: "premium",
+      width: 10,
+      value: (r) => r.sundayHours,
+    });
+  }
+  if (holidayRate > 0) {
+    columns.push({
+      header: `H. fériés\n(+${holidayRate}%)`,
+      section: "premium",
+      width: 10,
+      value: (r) => r.holidayHours,
+    });
+  }
+
   // Colonnes de pré-paie (n'apparaissent que si activées dans les réglages).
   if (mealAmount > 0) {
     columns.push({
@@ -240,6 +277,7 @@ export async function GET(request: NextRequest) {
       id: "FF334155", // ardoise foncée
       work: "FF059669", // émeraude
       overtime: "FFF59E0B", // ambre
+      premium: "FF8B5CF6", // violet (majorations)
       absence: "FF6366F1", // indigo
       payroll: "FFDC2626", // rouge (paie)
     };
@@ -247,6 +285,7 @@ export async function GET(request: NextRequest) {
       id: "",
       work: "TRAVAIL",
       overtime: "HEURES SUPP.",
+      premium: "HEURES MAJORÉES",
       absence: "ABSENCES (jours)",
       payroll: "PRÉ-PAIE (€)",
     };

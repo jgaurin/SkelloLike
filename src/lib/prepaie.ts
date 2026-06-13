@@ -7,6 +7,7 @@
  */
 
 import { shiftHours } from "@/lib/week";
+import { splitPremiumHours } from "@/lib/pay-premiums";
 
 export type PrepaieShift = {
   employee_id: string | null;
@@ -36,6 +37,10 @@ export type PrepaieRow = {
   holidaysWorked: number;
   /** Indemnités repas (€) = jours travaillés × montant par repas. */
   mealAllowance: number;
+  /** Heures majorées (ventilées). */
+  nightHours: number;
+  sundayHours: number;
+  holidayHours: number;
 };
 
 /** Numéro de semaine ISO 8601 d'une date ISO. */
@@ -74,6 +79,9 @@ export type PrepaieInput = {
   holidays: Set<string>;
   /** Indemnité repas (€) par jour travaillé. 0 = désactivé. */
   mealAmount: number;
+  /** Plage de nuit (heures) pour ventiler les heures de nuit. */
+  nightStartHour: number;
+  nightEndHour: number;
   monthStart: string; // YYYY-MM-01
   monthEnd: string; // dernier jour du mois
 };
@@ -88,10 +96,19 @@ export function computePrepaie(input: PrepaieInput): {
 } {
   const { employees, contractHours, shifts, absences } = input;
 
-  // Heures travaillées par employé, par semaine et par jour.
+  const premiumRules = {
+    nightStartHour: input.nightStartHour,
+    nightEndHour: input.nightEndHour,
+    holidays: input.holidays,
+  };
+
+  // Heures travaillées par employé, par semaine et par jour + heures majorées.
   type Acc = {
     hoursByWeek: Map<number, number>;
     days: Set<string>;
+    night: number;
+    sunday: number;
+    holiday: number;
   };
   const work = new Map<string, Acc>();
   const weeksSet = new Set<number>();
@@ -104,9 +121,25 @@ export function computePrepaie(input: PrepaieInput): {
     weeksSet.add(week);
     const acc =
       work.get(s.employee_id) ??
-      ({ hoursByWeek: new Map(), days: new Set() } as Acc);
+      ({
+        hoursByWeek: new Map(),
+        days: new Set(),
+        night: 0,
+        sunday: 0,
+        holiday: 0,
+      } as Acc);
     acc.hoursByWeek.set(week, (acc.hoursByWeek.get(week) ?? 0) + h);
     acc.days.add(s.shift_date);
+    const prem = splitPremiumHours(
+      s.shift_date,
+      s.start_time,
+      s.end_time,
+      s.break_minutes,
+      premiumRules,
+    );
+    acc.night += prem.night;
+    acc.sunday += prem.sunday;
+    acc.holiday += prem.holiday;
     work.set(s.employee_id, acc);
   }
 
@@ -174,6 +207,9 @@ export function computePrepaie(input: PrepaieInput): {
       absencesByType,
       holidaysWorked,
       mealAllowance: round2(workedDays * input.mealAmount),
+      nightHours: round2(acc?.night ?? 0),
+      sundayHours: round2(acc?.sunday ?? 0),
+      holidayHours: round2(acc?.holiday ?? 0),
     };
   });
 

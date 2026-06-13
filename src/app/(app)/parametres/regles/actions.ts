@@ -28,6 +28,13 @@ export async function updateOrgRules(
   const mealEnabled = formData.get("meal_allowance_enabled") === "on";
   const mealAmount = Number(formData.get("meal_allowance_amount") ?? 0) || 0;
 
+  // Majorations (% et plage de nuit).
+  const nightRate = Number(formData.get("night_premium_rate") ?? 0) || 0;
+  const nightStart = Number(formData.get("night_start_hour") ?? 21) || 21;
+  const nightEnd = Number(formData.get("night_end_hour") ?? 6) || 6;
+  const sundayRate = Number(formData.get("sunday_premium_rate") ?? 0) || 0;
+  const holidayRate = Number(formData.get("holiday_premium_rate") ?? 0) || 0;
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("organizations")
@@ -37,6 +44,11 @@ export async function updateOrgRules(
       reference_days_per_week: Math.max(1, Math.min(7, refDays)),
       meal_allowance_enabled: mealEnabled,
       meal_allowance_amount: Math.max(0, mealAmount),
+      night_premium_rate: Math.max(0, nightRate),
+      night_start_hour: Math.max(0, Math.min(23, nightStart)),
+      night_end_hour: Math.max(0, Math.min(23, nightEnd)),
+      sunday_premium_rate: Math.max(0, sundayRate),
+      holiday_premium_rate: Math.max(0, holidayRate),
     })
     .eq("id", ctx.orgId);
 

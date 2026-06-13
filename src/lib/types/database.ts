@@ -594,42 +594,57 @@ export type Database = {
         Row: {
           collective_agreement: string | null
           created_at: string
+          holiday_premium_rate: number
           id: string
           meal_allowance_amount: number
           meal_allowance_enabled: boolean
           name: string
+          night_end_hour: number
+          night_premium_rate: number
+          night_start_hour: number
           payroll_charge_rate: number
           plan: Database["public"]["Enums"]["org_plan"]
           reference_days_per_week: number
           slug: string
+          sunday_premium_rate: number
           trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
           collective_agreement?: string | null
           created_at?: string
+          holiday_premium_rate?: number
           id?: string
           meal_allowance_amount?: number
           meal_allowance_enabled?: boolean
           name: string
+          night_end_hour?: number
+          night_premium_rate?: number
+          night_start_hour?: number
           payroll_charge_rate?: number
           plan?: Database["public"]["Enums"]["org_plan"]
           reference_days_per_week?: number
           slug: string
+          sunday_premium_rate?: number
           trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
           collective_agreement?: string | null
           created_at?: string
+          holiday_premium_rate?: number
           id?: string
           meal_allowance_amount?: number
           meal_allowance_enabled?: boolean
           name?: string
+          night_end_hour?: number
+          night_premium_rate?: number
+          night_start_hour?: number
           payroll_charge_rate?: number
           plan?: Database["public"]["Enums"]["org_plan"]
           reference_days_per_week?: number
           slug?: string
+          sunday_premium_rate?: number
           trial_ends_at?: string | null
           updated_at?: string
         }
