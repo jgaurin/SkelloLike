@@ -12,6 +12,7 @@ import { InviteButton } from "./invite-button";
 import { ContractsPanel } from "./contracts-panel";
 import { PositionsPanel } from "./positions-panel";
 import { LocationsPanel } from "./locations-panel";
+import { DocumentsPanel } from "./documents-panel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -56,6 +57,7 @@ export default async function EmployeeDetailPage({
     { data: assigned },
     { data: allLocations },
     { data: empLocations },
+    { data: documents },
   ] = await Promise.all([
     supabase
       .from("contracts")
@@ -75,6 +77,11 @@ export default async function EmployeeDetailPage({
       .from("employee_locations")
       .select("location_id, is_primary")
       .eq("employee_id", id),
+    supabase
+      .from("documents")
+      .select("id, name, category, size_bytes, created_at")
+      .eq("employee_id", id)
+      .order("created_at", { ascending: false }),
   ]);
 
   const assignedIds = (assigned ?? []).map((a) => a.position_id);
@@ -193,6 +200,23 @@ export default async function EmployeeDetailPage({
                 allLocations={allLocations ?? []}
                 primaryId={primaryLocationId}
                 otherIds={otherLocationIds}
+                canManage={canManage}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-base">Documents</CardTitle>
+              <CardDescription>
+                Contrats, pièces d&apos;identité, diplômes… (max 10 Mo par
+                fichier).
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DocumentsPanel
+                employeeId={employee.id}
+                documents={documents ?? []}
                 canManage={canManage}
               />
             </CardContent>

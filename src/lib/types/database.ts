@@ -240,6 +240,60 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          category: string
+          created_at: string
+          employee_id: string
+          id: string
+          mime_type: string | null
+          name: string
+          org_id: string
+          size_bytes: number | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          mime_type?: string | null
+          name: string
+          org_id: string
+          size_bytes?: number | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          mime_type?: string | null
+          name?: string
+          org_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_locations: {
         Row: {
           employee_id: string
