@@ -76,23 +76,17 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="offcanvas">
       <SidebarHeader>
+        {/* Logo + sélecteur d'établissement sur une seule ligne */}
         <div className="flex items-center gap-2 px-2 py-1.5">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold">
             S
           </div>
-          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-sm font-semibold">{orgName}</span>
-            <span className="truncate text-xs text-sidebar-foreground/60">
-              SkelloLike
-            </span>
+          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <LocationSwitcher
+              locations={locations}
+              currentId={currentLocationId}
+            />
           </div>
-        </div>
-        {/* Sélecteur d'établissement global */}
-        <div className="px-2 pb-1 group-data-[collapsible=icon]:hidden">
-          <LocationSwitcher
-            locations={locations}
-            currentId={currentLocationId}
-          />
         </div>
       </SidebarHeader>
 

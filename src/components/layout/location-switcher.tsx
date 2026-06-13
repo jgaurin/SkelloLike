@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { Building2, ChevronsUpDown } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 import { setCurrentLocation } from "@/lib/auth/location-actions";
 import {
@@ -55,7 +55,6 @@ export function LocationSwitcher({
           <Building2 className="size-4 shrink-0" />
           <SelectValue />
         </span>
-        <ChevronsUpDown className="size-3.5 opacity-60" />
       </SelectTrigger>
       <SelectContent>
         {locations.map((l) => (
