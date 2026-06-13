@@ -41,6 +41,7 @@ export function PlanningToolbar({
   templates,
   teams,
   selectedTeam,
+  groupBy,
   status,
   blockingCount,
   canManage,
@@ -53,6 +54,7 @@ export function PlanningToolbar({
   templates: { id: string; name: string }[];
   teams: { id: string; name: string }[];
   selectedTeam: string | null;
+  groupBy: "employee" | "position";
   status: "draft" | "published" | "partial";
   blockingCount: number;
   canManage: boolean;
@@ -65,12 +67,19 @@ export function PlanningToolbar({
   const ALL_TEAMS = "__all__";
 
   // L'établissement est géré globalement (sidebar) ; on ne le passe plus en URL.
-  const go = (opts: { date?: string; view?: string; team?: string | null }) => {
+  const go = (opts: {
+    date?: string;
+    view?: string;
+    team?: string | null;
+    group?: "employee" | "position";
+  }) => {
     const date = opts.date ?? anchor;
     const v = opts.view ?? view;
     const team = opts.team === undefined ? selectedTeam : opts.team;
+    const grp = opts.group ?? groupBy;
     const teamParam = team ? `&team=${team}` : "";
-    router.push(`/planning?view=${v}&date=${date}${teamParam}`);
+    const groupParam = grp === "position" ? `&group=position` : "";
+    router.push(`/planning?view=${v}&date=${date}${teamParam}${groupParam}`);
   };
 
   const prev = () =>
@@ -140,6 +149,30 @@ export function PlanningToolbar({
           </Button>
         ))}
       </div>
+
+      {/* Regroupement Par employé / Par poste (vue Semaine uniquement) */}
+      {view === "week" && (
+        <div className="flex rounded-md border p-0.5">
+          <Button
+            type="button"
+            variant={groupBy === "employee" ? "default" : "ghost"}
+            size="sm"
+            className="h-7 px-3"
+            onClick={() => go({ group: "employee" })}
+          >
+            Par employé
+          </Button>
+          <Button
+            type="button"
+            variant={groupBy === "position" ? "default" : "ghost"}
+            size="sm"
+            className="h-7 px-3"
+            onClick={() => go({ group: "position" })}
+          >
+            Par poste
+          </Button>
+        </div>
+      )}
 
       {/* Navigation */}
       <div className="flex items-center gap-1">

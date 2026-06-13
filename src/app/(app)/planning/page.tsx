@@ -33,6 +33,7 @@ export default async function PlanningPage({
     date?: string;
     view?: string;
     team?: string;
+    group?: string;
   }>;
 }) {
   const ctx = await getAppContext();
@@ -41,6 +42,8 @@ export default async function PlanningPage({
   const params = await searchParams;
 
   const view: PlanningView = isPlanningView(params.view) ? params.view : "week";
+  const groupBy: "employee" | "position" =
+    params.group === "position" ? "position" : "employee";
 
   const { data: locations } = await supabase
     .from("locations")
@@ -250,6 +253,7 @@ export default async function PlanningPage({
         employees={employees ?? []}
         teams={teams}
         selectedTeam={selectedTeam}
+        groupBy={groupBy}
         positions={positions ?? []}
         shifts={shifts}
         absences={absences}

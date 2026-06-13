@@ -55,6 +55,7 @@ export function PlanningBoard({
   employees,
   teams,
   selectedTeam,
+  groupBy,
   positions,
   shifts,
   absences,
@@ -77,6 +78,7 @@ export function PlanningBoard({
   employees: Employee[];
   teams: { id: string; name: string }[];
   selectedTeam: string | null;
+  groupBy: "employee" | "position";
   positions: Position[];
   shifts: Shift[];
   absences: { employee_id: string; date: string; name: string; color: string }[];
@@ -556,6 +558,108 @@ export function PlanningBoard({
     </div>
   );
 
+  // ── Vue Semaine groupée par POSTE ────────────────────────────────────────
+  // Lignes = postes ; chaque cellule liste les employés à ce poste ce jour-là.
+  const empNameById = new Map(
+    employees.map((e) => [e.id, `${e.first_name} ${e.last_name}`]),
+  );
+  // Index : "positionId|date" -> shifts.
+  const byPosCell = new Map<string, Shift[]>();
+  const usedPositionIds = new Set<string>();
+  for (const s of localShifts) {
+    const pid = s.position_id ?? "none";
+    usedPositionIds.add(pid);
+    const key = `${pid}|${s.shift_date}`;
+    const arr = byPosCell.get(key) ?? [];
+    arr.push(s);
+    byPosCell.set(key, arr);
+  }
+  // Postes à afficher : tous les postes de l'org + un éventuel "Sans poste".
+  const posRows: { id: string; name: string; color: string }[] = positions.map(
+    (p) => ({ id: p.id, name: p.name, color: p.color }),
+  );
+  if (usedPositionIds.has("none")) {
+    posRows.push({ id: "none", name: "Sans poste", color: "#94A3B8" });
+  }
+
+  const renderWeekByPosition = () => (
+    <div className="min-w-[900px] overflow-hidden rounded-lg border">
+      <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-muted/40 text-sm">
+        <div className="p-3 font-medium">Poste</div>
+        {days.map((d, i) => (
+          <div
+            key={d}
+            className={cn(
+              "border-l p-3 text-center",
+              isToday(d) && "bg-primary/5",
+              isHoliday(d) && "bg-rose-50",
+            )}
+          >
+            <div className="font-medium">{WEEKDAYS_SHORT[i]}</div>
+            <div className="text-xs text-muted-foreground">
+              {fromISODate(d).getDate()}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {posRows.length === 0 ? (
+        <div className="p-8 text-center text-sm text-muted-foreground">
+          Aucun poste. Créez des postes pour cette vue.
+        </div>
+      ) : (
+        posRows.map((pos) => (
+          <div
+            key={pos.id}
+            className="grid grid-cols-[200px_repeat(7,1fr)] border-b last:border-b-0"
+          >
+            <div className="flex items-center gap-2 p-3">
+              <span
+                className="size-3 shrink-0 rounded-full"
+                style={{ backgroundColor: pos.color }}
+              />
+              <span className="truncate text-sm font-medium">{pos.name}</span>
+            </div>
+            {days.map((d) => {
+              const cell = (byPosCell.get(`${pos.id}|${d}`) ?? []).sort((a, b) =>
+                a.start_time.localeCompare(b.start_time),
+              );
+              return (
+                <div
+                  key={d}
+                  className={cn(
+                    "min-h-16 space-y-1 border-l p-1.5",
+                    isToday(d) && "bg-primary/5",
+                    isHoliday(d) && "bg-rose-50/60",
+                  )}
+                >
+                  {cell.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => openEdit(s)}
+                      className="block w-full truncate rounded-md px-2 py-1 text-left text-xs font-medium text-white"
+                      style={{ backgroundColor: pos.color }}
+                    >
+                      <span className="block truncate">
+                        {s.employee_id
+                          ? (empNameById.get(s.employee_id) ?? "—")
+                          : "Non assigné"}
+                      </span>
+                      <span className="opacity-90">
+                        {s.start_time}–{s.end_time}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        ))
+      )}
+    </div>
+  );
+
   // ── Vue Jour : un seul jour, tous les employés en lignes ─────────────────
   const renderDay = () => (
     <div className="overflow-hidden rounded-lg border">
@@ -688,6 +792,7 @@ export function PlanningBoard({
         templates={templates}
         teams={teams}
         selectedTeam={selectedTeam}
+        groupBy={groupBy}
         status={status}
         blockingCount={alerts.blockingTotal}
         canManage={canManage}
@@ -704,7 +809,8 @@ export function PlanningBoard({
       )}
 
       <div className="flex-1 overflow-auto p-4">
-        {view === "week" && renderWeek()}
+        {view === "week" &&
+          (groupBy === "position" ? renderWeekByPosition() : renderWeek())}
         {view === "day" && renderDay()}
         {view === "month" && renderMonth()}
       </div>
