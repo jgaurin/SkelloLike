@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   Clock,
+  ScanLine,
   Users,
   CalendarOff,
   FileText,
@@ -35,6 +36,7 @@ type NavItem = {
 const mainNav: NavItem[] = [
   { label: "Planning", href: "/planning", icon: CalendarDays },
   { label: "Pointage", href: "/pointage", icon: Clock },
+  { label: "Badgeuse", href: "/badgeuse", icon: ScanLine },
   { label: "Employés", href: "/employes", icon: Users },
   { label: "Absences", href: "/absences", icon: CalendarOff },
 ];
