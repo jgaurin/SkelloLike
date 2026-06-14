@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
     // Pointages clôturés du mois (pour l'export basé sur le réel).
     supabase
       .from("timeclocks")
-      .select("employee_id, clock_in, clock_out")
+      .select("employee_id, clock_in, clock_out, break_minutes")
       .eq("location_id", location.id)
       .not("clock_out", "is", null)
       .gte("clock_in", `${start}T00:00:00`)
@@ -147,7 +147,8 @@ export async function GET(request: NextRequest) {
           shift_date: localDate(c.clock_in),
           start_time: localHM(c.clock_in),
           end_time: localHM(c.clock_out as string),
-          break_minutes: 0,
+          // Déduit les pauses réellement pointées.
+          break_minutes: c.break_minutes ?? 0,
         }))
       : (shiftRows ?? []).map((s) => ({
           employee_id: s.employee_id,

@@ -1027,6 +1027,8 @@ export type Database = {
       }
       timeclocks: {
         Row: {
+          break_minutes: number
+          break_started_at: string | null
           clock_in: string
           clock_out: string | null
           created_at: string
@@ -1036,6 +1038,8 @@ export type Database = {
           org_id: string
         }
         Insert: {
+          break_minutes?: number
+          break_started_at?: string | null
           clock_in?: string
           clock_out?: string | null
           created_at?: string
@@ -1045,6 +1049,8 @@ export type Database = {
           org_id: string
         }
         Update: {
+          break_minutes?: number
+          break_started_at?: string | null
           clock_in?: string
           clock_out?: string | null
           created_at?: string

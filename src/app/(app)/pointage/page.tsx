@@ -56,7 +56,7 @@ export default async function PointagePage({
     supabase
       .from("timeclocks")
       .select(
-        "employee_id, clock_in, clock_out, employees(first_name, last_name)",
+        "employee_id, clock_in, clock_out, break_minutes, employees(first_name, last_name)",
       )
       .eq("location_id", currentId)
       .gte("clock_in", dayStart)
@@ -119,7 +119,8 @@ export default async function PointagePage({
       r.outTime = fmtTime(c.clock_out);
       const ms =
         new Date(c.clock_out).getTime() - new Date(c.clock_in).getTime();
-      r.actual += ms / 3600000;
+      // Heures réelles = temps total moins les pauses pointées.
+      r.actual += Math.max(0, ms / 3600000 - (c.break_minutes ?? 0) / 60);
     }
     rowMap.set(c.employee_id, r);
   }
