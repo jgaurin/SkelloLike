@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
+import { sendEmail, emailEnabled, invitationEmailHtml } from "@/lib/email";
 
 export type InviteResult =
-  | { ok: true; link: string }
+  | { ok: true; link: string; sent: boolean; email: string }
   | { ok: false; error: string };
 
 const MANAGER_ROLES = [
@@ -72,6 +73,20 @@ export async function inviteEmployee(
   }
 
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const link = `${base}/invitation/${invite.token}`;
+
+  // Envoie l'email d'invitation si Resend est configuré, sinon on retourne le
+  // lien pour que le manager le partage manuellement.
+  let sent = false;
+  if (emailEnabled()) {
+    const res = await sendEmail({
+      to: emp.email,
+      subject: `Invitation à rejoindre ${ctx.orgName} sur SkelloLike`,
+      html: invitationEmailHtml({ orgName: ctx.orgName, link }),
+    });
+    sent = res.ok;
+  }
+
   revalidatePath(`/employes/${employeeId}`);
-  return { ok: true, link: `${base}/invitation/${invite.token}` };
+  return { ok: true, link, sent, email: emp.email };
 }

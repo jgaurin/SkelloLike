@@ -29,10 +29,16 @@ export function InviteButton({
   const invite = () => {
     startTransition(async () => {
       const res = await inviteEmployee(employeeId);
-      if (res.ok) {
-        setLink(res.link);
-      } else {
+      if (!res.ok) {
         toast.error(res.error);
+        return;
+      }
+      if (res.sent) {
+        // Email parti : on confirme, pas besoin d'afficher le lien.
+        toast.success(`Invitation envoyée à ${res.email}.`);
+      } else {
+        // Pas d'email configuré : on affiche le lien à partager.
+        setLink(res.link);
       }
     });
   };
