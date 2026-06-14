@@ -1,11 +1,13 @@
-import { Clock } from "lucide-react";
+import Link from "next/link";
+import { Clock, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { getLocationContext } from "@/lib/auth/location-context";
 import { AppHeader } from "@/components/layout/app-header";
+import { Button } from "@/components/ui/button";
 import { RegularizeButton } from "./regularize-button";
-import { toISODate, trimSeconds, shiftHours } from "@/lib/week";
+import { toISODate, trimSeconds, shiftHours, shiftDay } from "@/lib/week";
 import {
   Table,
   TableBody,
@@ -146,6 +148,31 @@ export default async function PointagePage({
                 month: "long",
               })}
             </p>
+          </div>
+
+          {/* Navigation jour précédent / aujourd'hui / suivant */}
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="size-8" asChild>
+              <Link
+                href={`/pointage?day=${shiftDay(day, -1)}`}
+                aria-label="Jour précédent"
+              >
+                <ChevronLeft className="size-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/pointage?day=${toISODate(new Date())}`}>
+                Aujourd&apos;hui
+              </Link>
+            </Button>
+            <Button variant="outline" size="icon" className="size-8" asChild>
+              <Link
+                href={`/pointage?day=${shiftDay(day, 1)}`}
+                aria-label="Jour suivant"
+              >
+                <ChevronRight className="size-4" />
+              </Link>
+            </Button>
           </div>
         </div>
 
