@@ -50,6 +50,8 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const format = searchParams.get("format") === "csv" ? "csv" : "xlsx";
   const siteParam = searchParams.get("site");
+  // Source des heures : "real" (pointage réel) ou "planned" (planning, défaut).
+  const source = searchParams.get("source") === "real" ? "real" : "planned";
   const { start, end, label } = monthBounds(searchParams.get("month"));
 
   const supabase = await createClient();
@@ -67,6 +69,7 @@ export async function GET(request: NextRequest) {
     { data: shiftRows },
     { data: absRows },
     { data: org },
+    { data: clockRows },
   ] = await Promise.all([
     supabase
       .from("employees")
@@ -98,6 +101,14 @@ export async function GET(request: NextRequest) {
       )
       .eq("id", ctx.orgId)
       .single(),
+    // Pointages clôturés du mois (pour l'export basé sur le réel).
+    supabase
+      .from("timeclocks")
+      .select("employee_id, clock_in, clock_out")
+      .eq("location_id", location.id)
+      .not("clock_out", "is", null)
+      .gte("clock_in", `${start}T00:00:00`)
+      .lte("clock_in", `${end}T23:59:59`),
   ]);
 
   const mealAmount =
@@ -117,16 +128,39 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Heures HH:MM locales d'un timestamp.
+  const localHM = (iso: string) =>
+    new Date(iso).toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  const localDate = (iso: string) => {
+    const d = new Date(iso);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+
+  // Source des heures : planning (planifié) ou pointages clôturés (réel).
+  const sourceShifts =
+    source === "real"
+      ? (clockRows ?? []).map((c) => ({
+          employee_id: c.employee_id,
+          shift_date: localDate(c.clock_in),
+          start_time: localHM(c.clock_in),
+          end_time: localHM(c.clock_out as string),
+          break_minutes: 0,
+        }))
+      : (shiftRows ?? []).map((s) => ({
+          employee_id: s.employee_id,
+          shift_date: s.shift_date,
+          start_time: trimSeconds(s.start_time),
+          end_time: trimSeconds(s.end_time),
+          break_minutes: s.break_minutes,
+        }));
+
   const { rows, weeks, absenceTypes } = computePrepaie({
     employees: employees ?? [],
     contractHours,
-    shifts: (shiftRows ?? []).map((s) => ({
-      employee_id: s.employee_id,
-      shift_date: s.shift_date,
-      start_time: trimSeconds(s.start_time),
-      end_time: trimSeconds(s.end_time),
-      break_minutes: s.break_minutes,
-    })),
+    shifts: sourceShifts,
     absences: (absRows ?? []).map((a) => ({
       employee_id: a.employee_id,
       type_name: a.absence_types?.name ?? "Absence",
@@ -262,7 +296,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const filenameBase = `prepaie_${location.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}_${label}`;
+  const filenameBase = `prepaie_${source === "real" ? "reel_" : ""}${location.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}_${label}`;
 
   // ── Export Excel stylé (ExcelJS) ─────────────────────────────────────────
   if (format === "xlsx") {

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAppContext } from "@/lib/auth/context";
 import { getLocationContext } from "@/lib/auth/location-context";
 import { AppHeader } from "@/components/layout/app-header";
+import { RegularizeButton } from "./regularize-button";
 import { toISODate, trimSeconds, shiftHours } from "@/lib/week";
 import {
   Table,
@@ -31,6 +32,12 @@ export default async function PointagePage({
   const supabase = await createClient();
   const { currentId, currentName } = await getLocationContext();
   const params = await searchParams;
+  const canManage = [
+    "org_owner",
+    "org_admin",
+    "location_manager",
+    "team_manager",
+  ].includes(ctx.role);
 
   const day = params.day ?? toISODate(new Date());
   const dayStart = `${day}T00:00:00`;
@@ -160,6 +167,7 @@ export default async function PointagePage({
                   <TableHead className="text-right">Planifié</TableHead>
                   <TableHead className="text-right">Réel</TableHead>
                   <TableHead className="text-right">Écart</TableHead>
+                  {canManage && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -219,6 +227,18 @@ export default async function PointagePage({
                           "—"
                         )}
                       </TableCell>
+                      {canManage && (
+                        <TableCell>
+                          <RegularizeButton
+                            employeeId={r.employeeId}
+                            locationId={currentId}
+                            day={day}
+                            name={r.name}
+                            inTime={r.inTime}
+                            outTime={r.outTime}
+                          />
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 })}

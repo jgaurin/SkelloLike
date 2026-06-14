@@ -42,12 +42,13 @@ export function ExportPanel({ locations }: { locations: Location[] }) {
   const [site, setSite] = useState(locations[0]?.id ?? "");
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-based
+  const [source, setSource] = useState<"planned" | "real">("planned");
 
   const monthParam = `${year}-${String(month).padStart(2, "0")}`;
   const years = [now.getFullYear(), now.getFullYear() - 1, now.getFullYear() - 2];
 
   const href = (format: "xlsx" | "csv") =>
-    `/api/export/prepaie?site=${site}&month=${monthParam}&format=${format}`;
+    `/api/export/prepaie?site=${site}&month=${monthParam}&format=${format}&source=${source}`;
 
   return (
     <Card>
@@ -110,6 +111,40 @@ export function ExportPanel({ locations }: { locations: Location[] }) {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        {/* Source des heures : planifié (planning) ou réel (pointage). */}
+        <div className="space-y-1.5">
+          <Label>Base de calcul des heures</Label>
+          <div className="flex w-fit rounded-md border p-0.5">
+            <button
+              type="button"
+              onClick={() => setSource("planned")}
+              className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                source === "planned"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Planifié
+            </button>
+            <button
+              type="button"
+              onClick={() => setSource("real")}
+              className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                source === "real"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Réel (pointage)
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {source === "planned"
+              ? "Heures d'après le planning."
+              : "Heures réellement pointées à la badgeuse."}
+          </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
