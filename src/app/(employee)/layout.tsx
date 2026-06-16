@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, CalendarOff, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { getEmployeeContext } from "@/lib/auth/employee-context";
 import { logout } from "@/app/(auth)/actions";
@@ -28,31 +28,19 @@ export default async function EmployeeLayout({
       <header className="sticky top-0 z-10 border-b bg-background">
         <div className="mx-auto flex h-14 w-full max-w-4xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
           <Link href="/mon-espace" className="shrink-0 font-bold text-primary">
-            SkelloLike
+            Ritem
           </Link>
-          <nav className="flex items-center gap-0.5 text-sm sm:gap-1">
-            <Button variant="ghost" size="sm" asChild className="px-2 sm:px-3">
-              <Link href="/mon-espace">
-                <CalendarDays className="size-4" />
-                <span className="hidden sm:inline">Mon planning</span>
-              </Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="px-2 sm:px-3">
-              <Link href="/mon-espace/absences">
-                <CalendarOff className="size-4" />
-                <span className="hidden sm:inline">Mes absences</span>
-              </Link>
-            </Button>
-          </nav>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <span className="hidden text-sm text-muted-foreground md:inline">
               {ctx.orgName}
             </span>
-            <Avatar className="size-8 shrink-0">
-              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                {initials(ctx.fullName)}
-              </AvatarFallback>
-            </Avatar>
+            <Link href="/mon-espace/profil" aria-label="Mon profil">
+              <Avatar className="size-8 shrink-0">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  {initials(ctx.fullName)}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
             <form action={logout}>
               <Button
                 variant="outline"

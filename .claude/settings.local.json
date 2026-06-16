@@ -12,7 +12,13 @@
       "Bash(npx --yes create-next-app@latest skellolike-app --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack --no-git --yes)",
       "Bash(npx --yes supabase init)",
       "Bash(npm install *)",
-      "Bash(npx --yes shadcn@latest add input label card form sonner dropdown-menu avatar -y)"
+      "Bash(npx --yes shadcn@latest add input label card form sonner dropdown-menu avatar -y)",
+      "Bash(supabase status *)",
+      "Bash(cat /tmp/r.json; echo; echo \"--- logs auth ---\"; docker logs supabase_auth_SkelloLike --tail 15 2>&1 | grep -iv \"GET /health\")",
+      "Read(//tmp/**)",
+      "Bash(flutter create *)",
+      "Bash(flutter pub *)",
+      "Bash(flutter analyze *)"
     ]
   }
 }

@@ -34,6 +34,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          handled_at: string | null
+          id: string
+          message: string | null
+          org_id: string | null
+          phone: string | null
+          sector: string | null
+          status: Database["public"]["Enums"]["access_request_status"]
+          team_size: string | null
+        }
+        Insert: {
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          handled_at?: string | null
+          id?: string
+          message?: string | null
+          org_id?: string | null
+          phone?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["access_request_status"]
+          team_size?: string | null
+        }
+        Update: {
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          handled_at?: string | null
+          id?: string
+          message?: string | null
+          org_id?: string | null
+          phone?: string | null
+          sector?: string | null
+          status?: Database["public"]["Enums"]["access_request_status"]
+          team_size?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       absence_requests: {
         Row: {
           comment: string | null
@@ -1107,6 +1160,7 @@ export type Database = {
       user_org_ids: { Args: never; Returns: string[] }
     }
     Enums: {
+      access_request_status: "pending" | "approved" | "rejected"
       absence_status: "pending" | "approved" | "rejected" | "cancelled"
       app_role:
         | "org_owner"
@@ -1255,6 +1309,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      access_request_status: ["pending", "approved", "rejected"],
       absence_status: ["pending", "approved", "rejected", "cancelled"],
       app_role: [
         "org_owner",

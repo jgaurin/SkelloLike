@@ -189,6 +189,22 @@ export default async function EmployeeDetailPage({
 
           <Card className="lg:col-span-3">
             <CardHeader>
+              <CardTitle className="text-base">Pointage (badgeuse)</CardTitle>
+              <CardDescription>
+                Code PIN que l&apos;employé saisit sur la badgeuse.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PinPanel
+                employeeId={employee.id}
+                initialPin={employee.pin_code}
+                canManage={canManage}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="lg:col-span-3">
+            <CardHeader>
               <CardTitle className="text-base">Établissements</CardTitle>
               <CardDescription>
                 Le site principal de l&apos;employé et les autres où il peut
@@ -201,22 +217,6 @@ export default async function EmployeeDetailPage({
                 allLocations={allLocations ?? []}
                 primaryId={primaryLocationId}
                 otherIds={otherLocationIds}
-                canManage={canManage}
-              />
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle className="text-base">Pointage (badgeuse)</CardTitle>
-              <CardDescription>
-                Code PIN que l&apos;employé saisit sur la badgeuse.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PinPanel
-                employeeId={employee.id}
-                initialPin={employee.pin_code}
                 canManage={canManage}
               />
             </CardContent>

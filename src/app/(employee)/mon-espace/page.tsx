@@ -7,9 +7,11 @@ import {
   shiftHours,
   toISODate,
 } from "@/lib/week";
+import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MyShiftsView } from "./my-shifts-view";
 import { TeamDayView, type TeamShift } from "./team-day-view";
+import { AbsencesSection } from "./absences-section";
 
 export default async function MonEspacePage({
   searchParams,
@@ -20,7 +22,7 @@ export default async function MonEspacePage({
   const supabase = await createClient();
   const params = await searchParams;
 
-  const tab = params.tab === "equipe" ? "equipe" : "mes-shifts";
+  const planningTab = params.tab === "equipe" ? "equipe" : "mes-shifts";
 
   // ── Onglet "Mes shifts" : semaine ───────────────────────────────────────
   const weekStart = params.week ? getMonday(new Date(params.week)) : getMonday();
@@ -157,39 +159,50 @@ export default async function MonEspacePage({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       <div>
         <h1 className="text-xl font-semibold tracking-tight">
           Bonjour {ctx.fullName.split(" ")[0]} 👋
         </h1>
         <p className="text-sm text-muted-foreground">
-          Votre planning chez {ctx.orgName}.
+          Votre espace chez {ctx.orgName}.
         </p>
       </div>
 
-      <Tabs defaultValue={tab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="mes-shifts" asChild>
-            <a href="/mon-espace?tab=mes-shifts">Mes shifts</a>
-          </TabsTrigger>
-          <TabsTrigger value="equipe" asChild>
-            <a href="/mon-espace?tab=equipe">Toute l&apos;équipe</a>
-          </TabsTrigger>
-        </TabsList>
+      {/* ── Planning ─────────────────────────────────────────────────────── */}
+      <section id="planning" className="scroll-mt-20 space-y-4">
+        <h2 className="text-lg font-semibold tracking-tight">Mon planning</h2>
+        <Tabs defaultValue={planningTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="mes-shifts" asChild>
+              <a href="/mon-espace?tab=mes-shifts#planning">Mes shifts</a>
+            </TabsTrigger>
+            <TabsTrigger value="equipe" asChild>
+              <a href="/mon-espace?tab=equipe#planning">Toute l&apos;équipe</a>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="mes-shifts" className="mt-4">
-          <MyShiftsView
-            weekStart={weekStart}
-            days={weekDays}
-            shifts={myWeekShifts}
-            totalHours={myWeekHours}
-          />
-        </TabsContent>
+          <TabsContent value="mes-shifts" className="mt-4">
+            <MyShiftsView
+              weekStart={weekStart}
+              days={weekDays}
+              shifts={myWeekShifts}
+              totalHours={myWeekHours}
+            />
+          </TabsContent>
 
-        <TabsContent value="equipe" className="mt-4">
-          <TeamDayView day={day} roster={teamRoster} />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="equipe" className="mt-4">
+            <TeamDayView day={day} roster={teamRoster} />
+          </TabsContent>
+        </Tabs>
+      </section>
+
+      <Separator />
+
+      {/* ── Absences ─────────────────────────────────────────────────────── */}
+      <section id="absences" className="scroll-mt-20">
+        <AbsencesSection />
+      </section>
     </div>
   );
 }

@@ -10,7 +10,7 @@ import { Resend } from "resend";
 
 const apiKey = process.env.RESEND_API_KEY;
 const fromAddress =
-  process.env.RESEND_FROM ?? "SkelloLike <onboarding@resend.dev>";
+  process.env.RESEND_FROM ?? "Ritem <onboarding@resend.dev>";
 
 /** Vrai si l'envoi d'email est configuré. */
 export function emailEnabled(): boolean {
@@ -44,10 +44,10 @@ export function invitationEmailHtml(opts: {
 }): string {
   return `
   <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-    <h1 style="color: #059669; font-size: 20px;">SkelloLike</h1>
+    <h1 style="color: #059669; font-size: 20px;">Ritem</h1>
     <p style="font-size: 15px; color: #1e293b;">
       Bonjour,<br /><br />
-      Vous êtes invité·e à rejoindre <strong>${opts.orgName}</strong> sur SkelloLike
+      Vous êtes invité·e à rejoindre <strong>${opts.orgName}</strong> sur Ritem
       pour consulter votre planning et gérer vos absences.
     </p>
     <p style="margin: 24px 0;">

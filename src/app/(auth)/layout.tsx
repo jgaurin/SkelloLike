@@ -8,7 +8,7 @@ export default function AuthLayout({
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-primary">
-            SkelloLike
+            Ritem
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Plannings &amp; gestion RH simplifiés

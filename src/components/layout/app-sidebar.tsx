@@ -11,6 +11,7 @@ import {
   FileText,
   BarChart3,
   Settings,
+  Inbox,
 } from "lucide-react";
 
 import { LocationSwitcher } from "@/components/layout/location-switcher";
@@ -51,10 +52,12 @@ export function AppSidebar({
   orgName,
   locations,
   currentLocationId,
+  isSuperAdmin = false,
 }: {
   orgName: string;
   locations: { id: string; name: string }[];
   currentLocationId: string;
+  isSuperAdmin?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -79,7 +82,7 @@ export function AppSidebar({
         {/* Logo + sélecteur d'établissement sur une seule ligne */}
         <div className="flex items-center gap-2 px-2 py-1.5">
           <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold">
-            S
+            R
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
             <LocationSwitcher
@@ -104,6 +107,23 @@ export function AppSidebar({
             <SidebarMenu>{renderItems(manageNav)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isSuperAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Plateforme</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {renderItems([
+                  {
+                    label: "Demandes d'accès",
+                    href: "/access-requests",
+                    icon: Inbox,
+                  },
+                ])}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
 
       <SidebarFooter>

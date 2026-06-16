@@ -2,8 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { getEmployeeContext } from "@/lib/auth/employee-context";
 import { computeAccrued } from "@/lib/leave-accrual";
 import { AbsenceStatusBadge } from "@/app/(app)/absences/status-badge";
-import { RequestForm } from "./request-form";
-import { CancelButton } from "./cancel-button";
+import { RequestForm } from "./absences/request-form";
+import { CancelButton } from "./absences/cancel-button";
+import { CountersGrid } from "./absences/counters-grid";
 import {
   Card,
   CardContent,
@@ -27,7 +28,12 @@ function weekdaysBetween(start: string, end: string) {
   return c;
 }
 
-export default async function MesAbsencesPage() {
+/**
+ * Section « Mes absences » de l'espace employé : compteurs de soldes +
+ * historique des demandes + bouton de demande. Pensée pour être empilée dans
+ * la page unique /mon-espace.
+ */
+export async function AbsencesSection() {
   const ctx = await getEmployeeContext();
   const supabase = await createClient();
   const year = new Date().getFullYear();
@@ -39,7 +45,6 @@ export default async function MesAbsencesPage() {
         .select("id, start_date, end_date, status, comment, absence_types(name, color)")
         .eq("employee_id", ctx.employeeId)
         .order("start_date", { ascending: false }),
-      // Types ouverts aux demandes.
       supabase
         .from("absence_types")
         .select("id, name, monthly_accrual, annual_cap, period_start_month, affects_counter")
@@ -58,18 +63,18 @@ export default async function MesAbsencesPage() {
         .eq("year", year),
     ]);
 
-  // Compteurs : types qui décomptent un solde.
   const { data: counterTypes } = await supabase
     .from("absence_types")
-    .select("id, name, color, monthly_accrual, annual_cap, period_start_month")
+    .select(
+      "id, name, color, monthly_accrual, annual_cap, period_start_month, sort_order",
+    )
     .eq("affects_counter", true)
-    .order("name");
+    .order("sort_order");
 
   const adjustMap = new Map(
     (balances ?? []).map((b) => [b.type_id, Number(b.adjusted)]),
   );
 
-  // "Pris" par type (jours ouvrés, absences validées de l'année).
   const { data: approved } = await supabase
     .from("absence_requests")
     .select("type_id, start_date, end_date")
@@ -86,71 +91,40 @@ export default async function MesAbsencesPage() {
     );
   }
 
-  const counters = (counterTypes ?? []).map((t) => {
-    const acquired = computeAccrued(
-      {
-        monthlyAccrual: Number(t.monthly_accrual),
-        annualCap: Number(t.annual_cap),
-        periodStartMonth: t.period_start_month,
-      },
-      hireRow?.hire_date ?? null,
-    );
-    const adjusted = adjustMap.get(t.id) ?? 0;
-    const taken = takenMap.get(t.id) ?? 0;
-    return {
-      name: t.name,
-      color: t.color,
-      remaining: acquired + adjusted - taken,
-      acquired: acquired + adjusted,
-      taken,
-    };
-  });
+  const counters = (counterTypes ?? [])
+    .map((t) => {
+      const acquired = computeAccrued(
+        {
+          monthlyAccrual: Number(t.monthly_accrual),
+          annualCap: Number(t.annual_cap),
+          periodStartMonth: t.period_start_month,
+        },
+        hireRow?.hire_date ?? null,
+      );
+      const adjusted = adjustMap.get(t.id) ?? 0;
+      const taken = takenMap.get(t.id) ?? 0;
+      const accrues = Number(t.monthly_accrual) > 0 || adjusted > 0;
+      return {
+        name: t.name,
+        color: t.color,
+        accrues,
+        remaining: acquired + adjusted - taken,
+        taken,
+      };
+    })
+    .sort((a, b) => Number(b.accrues) - Number(a.accrues));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">Mes absences</h1>
+        <h2 className="text-lg font-semibold tracking-tight">Mes absences</h2>
         <RequestForm types={types ?? []} />
       </div>
 
-      {/* Compteurs */}
-      {counters.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {counters.map((c) => (
-            <Card key={c.name}>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <span
-                    className="size-2.5 rounded-full"
-                    style={{ backgroundColor: c.color }}
-                  />
-                  {c.name}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
-                  {c.remaining}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {" "}
-                    j restants
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {c.acquired} acquis · {c.taken} pris
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Historique des demandes */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Mes demandes</CardTitle>
-          <CardDescription>
-            {requests?.length ?? 0} demande(s)
-          </CardDescription>
+          <CardDescription>{requests?.length ?? 0} demande(s)</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {requests?.length ? (
@@ -184,6 +158,8 @@ export default async function MesAbsencesPage() {
           )}
         </CardContent>
       </Card>
+
+      {counters.length > 0 && <CountersGrid counters={counters} />}
     </div>
   );
 }

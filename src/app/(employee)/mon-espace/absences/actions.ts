@@ -56,7 +56,7 @@ export async function requestAbsence(
     return { error: "Impossible d'envoyer la demande." };
   }
 
-  revalidatePath("/mon-espace/absences");
+  revalidatePath("/mon-espace");
   revalidatePath("/absences");
   return { success: true };
 }
@@ -77,6 +77,6 @@ export async function cancelMyRequest(id: string): Promise<RequestState> {
 
   if (error) return { error: "Annulation impossible." };
 
-  revalidatePath("/mon-espace/absences");
+  revalidatePath("/mon-espace");
   return { success: true };
 }

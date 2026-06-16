@@ -9,6 +9,11 @@ export type EmployeeContext = {
   orgName: string;
   fullName: string;
   email: string;
+  phone: string | null;
+  employeeNumber: string | null;
+  hireDate: string | null;
+  avatarUrl: string | null;
+  pinCode: string | null;
 };
 
 /**
@@ -35,7 +40,9 @@ export async function getEmployeeContext(): Promise<EmployeeContext> {
 
   const { data: employee } = await supabase
     .from("employees")
-    .select("id, first_name, last_name, email")
+    .select(
+      "id, first_name, last_name, email, phone, employee_number, hire_date, avatar_url, pin_code",
+    )
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -51,5 +58,10 @@ export async function getEmployeeContext(): Promise<EmployeeContext> {
     orgName: membership.organizations?.name ?? "Mon entreprise",
     fullName: `${employee.first_name} ${employee.last_name}`,
     email: employee.email ?? user.email ?? "",
+    phone: employee.phone,
+    employeeNumber: employee.employee_number,
+    hireDate: employee.hire_date,
+    avatarUrl: employee.avatar_url,
+    pinCode: employee.pin_code,
   };
 }

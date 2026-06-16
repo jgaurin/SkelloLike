@@ -81,7 +81,7 @@ export async function inviteEmployee(
   if (emailEnabled()) {
     const res = await sendEmail({
       to: emp.email,
-      subject: `Invitation à rejoindre ${ctx.orgName} sur SkelloLike`,
+      subject: `Invitation à rejoindre ${ctx.orgName} sur Ritem`,
       html: invitationEmailHtml({ orgName: ctx.orgName, link }),
     });
     sent = res.ok;

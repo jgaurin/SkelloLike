@@ -1,0 +1,25 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo Ritem : carré émeraude à coins arrondis (rounded-xl), R blanc bold.
+       Reproduit le logo du site web. -->
+  <rect width="512" height="512" rx="114" ry="114" fill="#059669"/>
+  <!-- "R" épais, centré. Tracé vectoriel (indépendant des polices installées). -->
+  <path fill="#ffffff" d="
+    M 150 132
+    h 132
+    q 70 0 70 70
+    q 0 52 -44 66
+    l 54 112
+    h -68
+    l -48 -104
+    h -30
+    v 104
+    h -64
+    z
+    M 214 188
+    v 64
+    h 58
+    q 18 0 18 -32
+    q 0 -32 -18 -32
+    z
+  "/>
+</svg>

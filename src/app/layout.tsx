@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SkelloLike — Gestion des plannings",
+  title: "Ritem — Gestion des plannings",
   description:
-    "Planning, pointage et gestion RH pour vos équipes. Le clone open de Skello.",
+    "Planning, pointage et gestion RH pour vos équipes.",
 };
 
 export default function RootLayout({
@@ -30,9 +30,11 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${geistMono.variable} h-full scroll-smooth antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* suppressHydrationWarning : des extensions navigateur (ColorZilla…)
+          ajoutent des attributs au <body> avant l'hydratation. */}
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
         <Toaster richColors position="top-right" />
       </body>

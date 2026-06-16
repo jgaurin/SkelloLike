@@ -33,7 +33,7 @@ export default async function BadgeuseKioskPage() {
       <header className="flex items-center justify-between border-b bg-background px-6 py-4">
         <div className="flex items-center gap-2">
           <div className="flex size-8 items-center justify-center rounded-md bg-primary font-bold text-primary-foreground">
-            S
+            R
           </div>
           <span className="font-semibold">{currentName}</span>
         </div>
