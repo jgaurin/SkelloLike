@@ -196,7 +196,7 @@ begin
     -- ----- Établissement A : Bastille -----
     insert into public.schedules (location_id, week_start, status, published_at)
     values (v_loc_a, v_week,
-            case when v_week <= v_monday then 'published' else 'draft' end,
+            (case when v_week <= v_monday then 'published' else 'draft' end)::public.schedule_status,
             case when v_week <= v_monday then now() else null end)
     returning id into v_sched;
 
@@ -227,7 +227,7 @@ begin
     -- ----- Établissement B : Lyon (service soir, mer → dim) -----
     insert into public.schedules (location_id, week_start, status, published_at)
     values (v_loc_b, v_week,
-            case when v_week <= v_monday then 'published' else 'draft' end,
+            (case when v_week <= v_monday then 'published' else 'draft' end)::public.schedule_status,
             case when v_week <= v_monday then now() else null end)
     returning id into v_sched;
 
