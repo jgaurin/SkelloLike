@@ -17,6 +17,17 @@ export function emailEnabled(): boolean {
   return !!apiKey;
 }
 
+/**
+ * Adresses des propriétaires Ritem qui reçoivent les demandes de démo.
+ * Définies via DEMO_NOTIFY_EMAILS (séparées par des virgules).
+ */
+export function demoNotifyEmails(): string[] {
+  return (process.env.DEMO_NOTIFY_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+}
+
 export async function sendEmail(opts: {
   to: string;
   subject: string;
@@ -61,6 +72,45 @@ export function invitationEmailHtml(opts: {
       Ce lien expire dans 14 jours. S'il ne fonctionne pas, copiez cette adresse
       dans votre navigateur :<br />
       <span style="word-break: break-all;">${opts.link}</span>
+    </p>
+  </div>`;
+}
+
+/** Gabarit HTML de notification d'une nouvelle demande de démo (interne). */
+export function demoRequestEmailHtml(opts: {
+  companyName: string;
+  contactName: string;
+  email: string;
+  phone: string | null;
+  sector: string | null;
+  teamSize: string | null;
+  message: string | null;
+}): string {
+  const row = (label: string, value: string | null) =>
+    value
+      ? `<tr><td style="padding:6px 12px;color:#64748b;font-size:13px;">${label}</td>
+         <td style="padding:6px 12px;color:#1e293b;font-size:14px;font-weight:500;">${value}</td></tr>`
+      : "";
+  return `
+  <div style="font-family: -apple-system, Segoe UI, Roboto, sans-serif; max-width: 520px; margin: 0 auto; padding: 24px;">
+    <h1 style="color: #059669; font-size: 18px;">Nouvelle demande de démo</h1>
+    <p style="font-size: 14px; color: #1e293b;">
+      Un prospect a rempli le formulaire sur ritem.pro :
+    </p>
+    <table style="width:100%;border-collapse:collapse;background:#f8fafc;border-radius:8px;">
+      ${row("Entreprise", opts.companyName)}
+      ${row("Contact", opts.contactName)}
+      ${row("Email", opts.email)}
+      ${row("Téléphone", opts.phone)}
+      ${row("Secteur", opts.sector)}
+      ${row("Taille d'équipe", opts.teamSize)}
+      ${row("Message", opts.message)}
+    </table>
+    <p style="margin-top:20px;">
+      <a href="mailto:${opts.email}"
+         style="background:#059669;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;">
+        Répondre à ${opts.contactName}
+      </a>
     </p>
   </div>`;
 }

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Accès & secrets de déploiement (ne jamais commiter)
+DEPLOIEMENT.md

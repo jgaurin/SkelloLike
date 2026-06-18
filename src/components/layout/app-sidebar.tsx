@@ -11,7 +11,6 @@ import {
   FileText,
   BarChart3,
   Settings,
-  Inbox,
 } from "lucide-react";
 
 import { LocationSwitcher } from "@/components/layout/location-switcher";
@@ -52,12 +51,10 @@ export function AppSidebar({
   orgName,
   locations,
   currentLocationId,
-  isSuperAdmin = false,
 }: {
   orgName: string;
   locations: { id: string; name: string }[];
   currentLocationId: string;
-  isSuperAdmin?: boolean;
 }) {
   const pathname = usePathname();
 
@@ -108,22 +105,6 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isSuperAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel>Plateforme</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {renderItems([
-                  {
-                    label: "Demandes d'accès",
-                    href: "/access-requests",
-                    icon: Inbox,
-                  },
-                ])}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
       </SidebarContent>
 
       <SidebarFooter>

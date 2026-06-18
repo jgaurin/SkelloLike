@@ -1,15 +1,21 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  sendEmail,
+  emailEnabled,
+  demoNotifyEmails,
+  demoRequestEmailHtml,
+} from "@/lib/email";
 
 export type AccessRequestState = { ok: boolean; error?: string };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
- * Enregistre une demande d'accès (lead) déposée depuis la landing page publique.
- * Insertion via le service role car la table access_requests est verrouillée par
- * RLS (aucun accès client). Aucune authentification requise : route publique.
+ * Demande de démo déposée depuis la landing publique.
+ * Les demandes sont gérées par les propriétaires Ritem PAR EMAIL uniquement :
+ * on envoie une notification aux adresses DEMO_NOTIFY_EMAILS. Aucune donnée
+ * n'est stockée ni exposée dans l'application. Route publique, sans auth.
  */
 export async function submitAccessRequest(
   _prev: AccessRequestState,
@@ -30,18 +36,33 @@ export async function submitAccessRequest(
     return { ok: false, error: "Adresse email invalide." };
   }
 
-  const admin = createAdminClient();
-  const { error } = await admin.from("access_requests").insert({
-    company_name: companyName,
-    contact_name: contactName,
-    email,
-    phone,
-    sector,
-    team_size: teamSize,
-    message,
+  const recipients = demoNotifyEmails();
+  if (!emailEnabled() || recipients.length === 0) {
+    // Mauvaise configuration serveur : on log et on renvoie une erreur générique.
+    console.error(
+      "[demo] Notification impossible : RESEND_API_KEY ou DEMO_NOTIFY_EMAILS manquant.",
+    );
+    return {
+      ok: false,
+      error: "Envoi impossible pour le moment. Réessayez plus tard.",
+    };
+  }
+
+  const res = await sendEmail({
+    to: recipients.join(", "),
+    subject: `Demande de démo — ${companyName}`,
+    html: demoRequestEmailHtml({
+      companyName,
+      contactName,
+      email,
+      phone,
+      sector,
+      teamSize,
+      message,
+    }),
   });
 
-  if (error) {
+  if (!res.ok) {
     return { ok: false, error: "Envoi impossible pour le moment. Réessayez." };
   }
 

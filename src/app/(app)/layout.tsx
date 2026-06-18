@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { getLocationContext } from "@/lib/auth/location-context";
-import { isSuperAdminEmail } from "@/lib/auth/super-admin";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 
@@ -45,7 +44,6 @@ export default async function AppLayout({
         orgName={orgName}
         locations={loc.locations}
         currentLocationId={loc.currentId}
-        isSuperAdmin={isSuperAdminEmail(user.email)}
       />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
