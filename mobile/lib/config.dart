@@ -1,18 +1,20 @@
 /// Configuration de connexion à Supabase.
 ///
-/// En dev local, le projet web tourne sur http://127.0.0.1:54321.
-/// Sur Flutter web (Chrome) on atteint 127.0.0.1 directement ; sur un
-/// émulateur Android il faudrait remplacer par http://10.0.2.2:54321.
+/// Par défaut : projet Supabase Cloud de production (ritem).
+/// La clé anon est publique (destinée au client), filtrée par la RLS.
 ///
-/// La clé anon est publique (destinée au client), elle est filtrée par la RLS.
+/// Pour pointer vers le Supabase local en dev, lancer avec :
+///   flutter run --dart-define=SUPABASE_URL=http://10.0.2.2:54321 \
+///               --dart-define=SUPABASE_ANON_KEY=cle_locale
+/// (10.0.2.2 = host depuis l'émulateur Android ; 127.0.0.1 sur web/desktop.)
 class Config {
   static const supabaseUrl = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'http://127.0.0.1:54321',
+    defaultValue: 'https://tnqpcsvzwyrfgicayhox.supabase.co',
   );
 
   static const supabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue: 'sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH',
+    defaultValue: 'sb_publishable_POVZbnllDAPmvlAcsPzVSw_qmRTo02n',
   );
 }
