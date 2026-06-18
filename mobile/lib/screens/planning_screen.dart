@@ -58,7 +58,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
 
 // ── Onglet "Mes shifts" (semaine) ───────────────────────────────────────────
 
-class _MyShiftsTab extends StatelessWidget {
+class _MyShiftsTab extends StatefulWidget {
   final EmployeeContext ctx;
   final String weekStart;
   final void Function(int delta) onWeek;
@@ -69,24 +69,52 @@ class _MyShiftsTab extends StatelessWidget {
     required this.onWeek,
   });
 
+  @override
+  State<_MyShiftsTab> createState() => _MyShiftsTabState();
+}
+
+class _MyShiftsTabState extends State<_MyShiftsTab> {
+  late Future<List<Map<String, dynamic>>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  @override
+  void didUpdateWidget(_MyShiftsTab old) {
+    super.didUpdateWidget(old);
+    // Recharge quand on change de semaine.
+    if (old.weekStart != widget.weekStart) {
+      _future = _load();
+    }
+  }
+
   Future<List<Map<String, dynamic>>> _load() async {
-    final days = weekDates(weekStart);
+    final days = weekDates(widget.weekStart);
     final rows = await supabase
         .from('shifts')
         .select(
             'id, shift_date, start_time, end_time, break_minutes, positions(name, color), schedules!inner(status)')
-        .eq('employee_id', ctx.employeeId)
+        .eq('employee_id', widget.ctx.employeeId)
         .eq('status', 'published')
         .gte('shift_date', days.first)
         .lte('shift_date', days.last);
     return List<Map<String, dynamic>>.from(rows);
   }
 
+  Future<void> _refresh() async {
+    final f = _load();
+    setState(() => _future = f);
+    await f;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final days = weekDates(weekStart);
+    final days = weekDates(widget.weekStart);
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _load(),
+      future: _future,
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -106,22 +134,27 @@ class _MyShiftsTab extends StatelessWidget {
         return Column(
           children: [
             _WeekNav(
-              label: formatWeekRange(weekStart),
+              label: formatWeekRange(widget.weekStart),
               sub: '${total.round()}h cette semaine',
-              onPrev: () => onWeek(-1),
-              onNext: () => onWeek(1),
+              onPrev: () => widget.onWeek(-1),
+              onNext: () => widget.onWeek(1),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                itemCount: days.length,
-                itemBuilder: (context, i) {
-                  final d = days[i];
-                  final shifts = (byDay[d] ?? [])
-                    ..sort((a, b) => (a['start_time'] as String)
-                        .compareTo(b['start_time'] as String));
-                  return _DayRow(date: d, index: i, shifts: shifts);
-                },
+              child: RefreshIndicator(
+                color: emerald,
+                onRefresh: _refresh,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  itemCount: days.length,
+                  itemBuilder: (context, i) {
+                    final d = days[i];
+                    final shifts = (byDay[d] ?? [])
+                      ..sort((a, b) => (a['start_time'] as String)
+                          .compareTo(b['start_time'] as String));
+                    return _DayRow(date: d, index: i, shifts: shifts);
+                  },
+                ),
               ),
             ),
           ],
@@ -214,14 +247,43 @@ class _DayRow extends StatelessWidget {
 
 // ── Onglet "Toute l'équipe" (jour) ──────────────────────────────────────────
 
-class _TeamTab extends StatelessWidget {
+class _TeamTab extends StatefulWidget {
   final EmployeeContext ctx;
   final String day;
   final void Function(int delta) onDay;
 
   const _TeamTab({required this.ctx, required this.day, required this.onDay});
 
+  @override
+  State<_TeamTab> createState() => _TeamTabState();
+}
+
+class _TeamTabState extends State<_TeamTab> {
+  late Future<List<_TeamMember>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  @override
+  void didUpdateWidget(_TeamTab old) {
+    super.didUpdateWidget(old);
+    if (old.day != widget.day) {
+      _future = _load();
+    }
+  }
+
+  Future<void> _refresh() async {
+    final f = _load();
+    setState(() => _future = f);
+    await f;
+  }
+
   Future<List<_TeamMember>> _load() async {
+    final day = widget.day;
+    final ctx = widget.ctx;
     final results = await Future.wait([
       supabase
           .from('shifts')
@@ -292,7 +354,7 @@ class _TeamTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<_TeamMember>>(
-      future: _load(),
+      future: _future,
       builder: (context, snap) {
         if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -300,16 +362,21 @@ class _TeamTab extends StatelessWidget {
         return Column(
           children: [
             _WeekNav(
-              label: formatDayLong(day),
+              label: formatDayLong(widget.day),
               sub: null,
-              onPrev: () => onDay(-1),
-              onNext: () => onDay(1),
+              onPrev: () => widget.onDay(-1),
+              onNext: () => widget.onDay(1),
             ),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                itemCount: snap.data!.length,
-                itemBuilder: (context, i) => _MemberRow(m: snap.data![i]),
+              child: RefreshIndicator(
+                color: emerald,
+                onRefresh: _refresh,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                  itemCount: snap.data!.length,
+                  itemBuilder: (context, i) => _MemberRow(m: snap.data![i]),
+                ),
               ),
             ),
           ],

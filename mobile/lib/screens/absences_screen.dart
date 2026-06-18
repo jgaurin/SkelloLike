@@ -24,7 +24,11 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
     _future = _load();
   }
 
-  void _refresh() => setState(() => _future = _load());
+  Future<void> _refresh() async {
+    final f = _load();
+    setState(() => _future = f);
+    await f;
+  }
 
   Future<_AbsenceData> _load() async {
     final results = await Future.wait([
@@ -84,25 +88,30 @@ class _AbsencesScreenState extends State<AbsencesScreen> {
             label: const Text('Demander',
                 style: TextStyle(color: Colors.white)),
           ),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              const Text('Mes demandes',
-                  style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 4),
-              Text('${data.requests.length} demande(s)',
-                  style: const TextStyle(color: kMutedForeground)),
-              const SizedBox(height: 12),
-              if (data.requests.isEmpty)
-                const Text("Aucune demande pour l'instant.",
-                    style: TextStyle(color: kMutedForeground))
-              else
-                ...data.requests.map((r) => _RequestTile(
-                      req: r,
-                      onCancel: () => _cancel(r['id'] as String),
-                    )),
-            ],
+          body: RefreshIndicator(
+            color: emerald,
+            onRefresh: _refresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              children: [
+                const Text('Mes demandes',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('${data.requests.length} demande(s)',
+                    style: const TextStyle(color: kMutedForeground)),
+                const SizedBox(height: 12),
+                if (data.requests.isEmpty)
+                  const Text("Aucune demande pour l'instant.",
+                      style: TextStyle(color: kMutedForeground))
+                else
+                  ...data.requests.map((r) => _RequestTile(
+                        req: r,
+                        onCancel: () => _cancel(r['id'] as String),
+                      )),
+              ],
+            ),
           ),
         );
       },
