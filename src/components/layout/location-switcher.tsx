@@ -53,7 +53,9 @@ export function LocationSwitcher({
       <SelectTrigger className="h-9 w-full border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground">
         <span className="flex min-w-0 items-center gap-2">
           <Building2 className="size-4 shrink-0" />
-          <SelectValue />
+          <span className="min-w-0 truncate">
+            <SelectValue />
+          </span>
         </span>
       </SelectTrigger>
       <SelectContent>
