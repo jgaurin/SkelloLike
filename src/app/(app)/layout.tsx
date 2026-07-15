@@ -39,7 +39,14 @@ export default async function AppLayout({
   const loc = await getLocationContext();
 
   return (
-    <SidebarProvider>
+    <SidebarProvider
+      style={
+        {
+          // 3rem par defaut : trop juste pour des boutons de 40px replies.
+          "--sidebar-width-icon": "4.5rem",
+        } as React.CSSProperties
+      }
+    >
       <AppSidebar
         orgName={orgName}
         locations={loc.locations}
