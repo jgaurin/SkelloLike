@@ -61,7 +61,7 @@ export default function ConfidentialitePage() {
               éditeur individuel.
             </p>
             <p>
-              Contact : <strong>ritem.pro@gmail.com</strong>
+              Contact : <strong>contact@ritem.pro</strong>
             </p>
             <p>
               Pour les données saisies par les employés, l&apos;entreprise
@@ -171,7 +171,7 @@ export default function ConfidentialitePage() {
               de rectification, d&apos;effacement, de limitation et
               d&apos;opposition sur vos données. Ces droits s&apos;exercent en
               priorité auprès de votre employeur (responsable de traitement), ou
-              en nous contactant à <strong>ritem.pro@gmail.com</strong>.
+              en nous contactant à <strong>contact@ritem.pro</strong>.
             </p>
             <p>
               Vous pouvez également introduire une réclamation auprès de la CNIL
@@ -193,7 +193,7 @@ export default function ConfidentialitePage() {
             <p>
               Pour demander la suppression de votre compte et de vos données,
               contactez votre employeur ou écrivez à{" "}
-              <strong>ritem.pro@gmail.com</strong>. La demande est traitée sous
+              <strong>contact@ritem.pro</strong>. La demande est traitée sous
               30 jours.
             </p>
           </section>
@@ -211,7 +211,7 @@ export default function ConfidentialitePage() {
             <h2>11. Contact</h2>
             <p>
               Pour toute question relative à cette politique ou à vos données :{" "}
-              <strong>ritem.pro@gmail.com</strong>.
+              <strong>contact@ritem.pro</strong>.
             </p>
           </section>
         </div>

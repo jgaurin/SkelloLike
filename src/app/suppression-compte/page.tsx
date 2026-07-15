@@ -68,10 +68,10 @@ export default function SuppressionComptePage() {
               <li>
                 Ou envoyez un e-mail à{" "}
                 <a
-                  href="mailto:ritem.pro@gmail.com?subject=Demande%20de%20suppression%20de%20compte%20Ritem"
+                  href="mailto:contact@ritem.pro?subject=Demande%20de%20suppression%20de%20compte%20Ritem"
                   className="text-primary underline underline-offset-2"
                 >
-                  ritem.pro@gmail.com
+                  contact@ritem.pro
                 </a>{" "}
                 depuis l&apos;adresse liée à votre compte, avec l&apos;objet
                 « Demande de suppression de compte ».
@@ -135,7 +135,7 @@ export default function SuppressionComptePage() {
             <h2>Contact</h2>
             <p>
               Pour toute question sur la suppression de vos données :{" "}
-              <strong>ritem.pro@gmail.com</strong>.
+              <strong>contact@ritem.pro</strong>.
             </p>
           </section>
         </div>

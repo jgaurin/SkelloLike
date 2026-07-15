@@ -18,7 +18,7 @@ destinée aux employés des entreprises clientes de Ritem.
 L'Application est éditée par **Jorian Gaurin**, éditeur individuel,
 5 rue de Fissac, 17180 Périgny (France).
 
-Contact : **ritem.pro@gmail.com**
+Contact : **contact@ritem.pro**
 
 Pour les données saisies par les employés, l'entreprise employeuse (cliente de
 Ritem) agit en tant que **responsable de traitement** ; Ritem agit en tant que
@@ -84,7 +84,7 @@ chiffrées (HTTPS/TLS).
 Conformément au RGPD, vous disposez d'un droit d'accès, de rectification,
 d'effacement, de limitation et d'opposition sur vos données. Ces droits
 s'exercent en priorité auprès de votre employeur (responsable de traitement),
-ou en nous contactant à **ritem.pro@gmail.com**.
+ou en nous contactant à **contact@ritem.pro**.
 
 Vous pouvez également introduire une réclamation auprès de la CNIL
 (www.cnil.fr).
@@ -92,7 +92,7 @@ Vous pouvez également introduire une réclamation auprès de la CNIL
 ## 9. Suppression de compte et des données
 
 Pour demander la suppression de votre compte et de vos données, contactez votre
-employeur ou écrivez à **ritem.pro@gmail.com**. La demande est traitée sous 30
+employeur ou écrivez à **contact@ritem.pro**. La demande est traitée sous 30
 jours.
 
 ## 10. Modifications
@@ -104,4 +104,4 @@ seront informés.
 ## 11. Contact
 
 Pour toute question relative à cette politique ou à vos données :
-**ritem.pro@gmail.com**.
+**contact@ritem.pro**.
