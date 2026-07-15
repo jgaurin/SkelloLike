@@ -72,10 +72,15 @@ export function AppSidebar({
           isActive={isActive(item.href)}
           tooltip={item.label}
           onClick={() => setOpenMobile(false)}
-          className="h-9 gap-3 font-medium text-sidebar-foreground/80 transition-colors hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-active:shadow-sm"
+          className="relative h-10 gap-3 rounded-xl px-3 font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground group-data-[collapsible=icon]:px-0! [&_svg]:size-[1.125rem]"
         >
           <Link href={item.href}>
-            <item.icon className="size-4 shrink-0" />
+            {/* Barre d'accent : repere l'onglet courant, y compris replie. */}
+            <span
+              aria-hidden
+              className="absolute left-0 top-1/2 h-0 w-1 -translate-y-1/2 rounded-r-full bg-sidebar-primary transition-[height] duration-200 ease-(--ease-out-quint) group-data-active/menu-button:h-5"
+            />
+            <item.icon className="shrink-0 transition-transform duration-200 ease-(--ease-out-quint) group-hover/menu-button:scale-110" />
             <span>{item.label}</span>
           </Link>
         </SidebarMenuButton>
@@ -84,45 +89,60 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="gap-0 border-b border-sidebar-border/60 pb-2">
-        {/* Logo + sélecteur d'établissement sur une seule ligne */}
-        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground shadow-sm">
+      <SidebarHeader className="gap-3 px-3 pt-3 pb-2 group-data-[collapsible=icon]:px-2">
+        {/* Monogramme : seul repere de marque une fois replie. */}
+        <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sidebar-primary text-base font-bold text-sidebar-primary-foreground">
             R
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <LocationSwitcher
-              locations={locations}
-              currentId={currentLocationId}
-            />
+            <p className="truncate text-sm font-semibold text-sidebar-foreground">
+              Ritem
+            </p>
+            <p className="truncate text-[0.6875rem] text-sidebar-foreground/50">
+              {orgName}
+            </p>
           </div>
+        </div>
+
+        {/* Etablissement : masque replie, faute de place pour un select. */}
+        <div className="group-data-[collapsible=icon]:hidden">
+          <LocationSwitcher
+            locations={locations}
+            currentId={currentLocationId}
+          />
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-1 pt-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-[0.6875rem] font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
+      <SidebarContent className="gap-2 px-2 pt-1">
+        <SidebarGroup className="p-0">
+          <SidebarGroupLabel className="h-7 px-3 text-[0.625rem] font-semibold tracking-[0.08em] text-sidebar-foreground/40 uppercase">
             Pilotage
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(mainNav)}</SidebarMenu>
+            <SidebarMenu className="gap-1">{renderItems(mainNav)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-[0.6875rem] font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
+        <SidebarGroup className="p-0">
+          <SidebarGroupLabel className="h-7 px-3 text-[0.625rem] font-semibold tracking-[0.08em] text-sidebar-foreground/40 uppercase">
             Gestion
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>{renderItems(manageNav)}</SidebarMenu>
+            <SidebarMenu className="gap-1">{renderItems(manageNav)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border/60">
-        <p className="px-2 py-1 text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
-          Phase 1 · MVP
-        </p>
+      <SidebarFooter className="p-3 group-data-[collapsible=icon]:px-2">
+        <div className="rounded-xl bg-sidebar-accent/40 p-3 group-data-[collapsible=icon]:hidden">
+          <p className="text-[0.6875rem] font-medium text-sidebar-foreground/80">
+            Version d&apos;essai
+          </p>
+          <p className="mt-0.5 text-[0.625rem] text-sidebar-foreground/50">
+            Phase 1 · MVP
+          </p>
+        </div>
       </SidebarFooter>
 
       {/* Bord cliquable : replier/deplier sans viser le bouton du header. */}
