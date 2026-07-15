@@ -25,6 +25,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
 
@@ -123,6 +124,9 @@ export function AppSidebar({
           Phase 1 · MVP
         </p>
       </SidebarFooter>
+
+      {/* Bord cliquable : replier/deplier sans viser le bouton du header. */}
+      <SidebarRail />
     </Sidebar>
   );
 }

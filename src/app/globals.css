@@ -83,6 +83,10 @@
   --elevation-card-hover:
     0 2px 4px -1px oklch(0.32 0.06 165 / 0.1),
     0 12px 28px -4px oklch(0.32 0.06 165 / 0.14);
+  /* Mouvement : ease-out-quint — démarre vite, se pose en douceur.
+     Même courbe que les révélations de la landing (rise-in). */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-sidebar: 320ms;
   /* Sidebar émeraude foncée (pattern SaaS : navigation latérale colorée) */
   --sidebar: oklch(0.32 0.06 165);
   --sidebar-foreground: oklch(0.95 0.02 165);
@@ -154,6 +158,48 @@
     transition:
       box-shadow 200ms ease,
       transform 200ms ease;
+  }
+
+  /* Sidebar : la primitive shadcn anime en `ease-linear`, ce qui donne un
+     mouvement mecanique (demarrage et arret secs). On repasse sur la meme
+     courbe que la landing, depuis ici plutot que d'editer ui/sidebar.tsx. */
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"] {
+    transition-timing-function: var(--ease-out-quint);
+    transition-duration: var(--duration-sidebar);
+  }
+
+  /* Les libelles s'effacent avant que la colonne ne se retracte : sans ca ils
+     sont ecrases pendant l'animation. */
+  [data-slot="sidebar-group-label"] {
+    transition-timing-function: var(--ease-out-quint);
+    transition-duration: var(--duration-sidebar);
+  }
+
+  [data-slot="sidebar-menu-button"] > span:last-child {
+    transition:
+      opacity 180ms var(--ease-out-quint),
+      transform 180ms var(--ease-out-quint);
+  }
+
+  [data-collapsible="icon"] [data-slot="sidebar-menu-button"] > span:last-child {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+
+  /* Bord cliquable : la barre de saisie s'epaissit et s'allume au survol. */
+  [data-slot="sidebar-rail"] {
+    transition-timing-function: var(--ease-out-quint);
+    transition-duration: var(--duration-sidebar);
+  }
+  [data-slot="sidebar-rail"]::after {
+    transition:
+      background-color 180ms var(--ease-out-quint),
+      width 180ms var(--ease-out-quint);
+  }
+  [data-slot="sidebar-rail"]:hover::after {
+    width: 3px;
+    background-color: var(--sidebar-primary);
   }
 }
 
@@ -259,5 +305,14 @@
   }
   [data-slot="card"]:hover {
     transform: none;
+  }
+  /* La sidebar change d'etat instantanement, sans glissement. */
+  [data-slot="sidebar-gap"],
+  [data-slot="sidebar-container"],
+  [data-slot="sidebar-group-label"],
+  [data-slot="sidebar-rail"],
+  [data-slot="sidebar-rail"]::after,
+  [data-slot="sidebar-menu-button"] > span:last-child {
+    transition: none;
   }
 }
