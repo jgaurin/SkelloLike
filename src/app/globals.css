@@ -73,7 +73,16 @@
   --chart-3: oklch(0.55 0.12 200);
   --chart-4: oklch(0.75 0.15 130);
   --chart-5: oklch(0.65 0.18 90);
-  --radius: 0.625rem;
+  /* Arrondi généreux, aligné sur la maquette de la landing (rounded-2xl/3xl).
+     Toute l'échelle --radius-* en dérive : une seule valeur à bouger. */
+  --radius: 0.875rem;
+  /* Élévation : ombre douce teintée émeraude plutôt qu'un gris neutre. */
+  --elevation-card:
+    0 1px 2px -1px oklch(0.32 0.06 165 / 0.08),
+    0 4px 12px -2px oklch(0.32 0.06 165 / 0.08);
+  --elevation-card-hover:
+    0 2px 4px -1px oklch(0.32 0.06 165 / 0.1),
+    0 12px 28px -4px oklch(0.32 0.06 165 / 0.14);
   /* Sidebar émeraude foncée (pattern SaaS : navigation latérale colorée) */
   --sidebar: oklch(0.32 0.06 165);
   --sidebar-foreground: oklch(0.95 0.02 165);
@@ -86,6 +95,12 @@
 }
 
 .dark {
+  /* Sur fond sombre une ombre noire est invisible : on l'assombrit franchement
+     et on s'appuie surtout sur le contraste card/background. */
+  --elevation-card:
+    0 1px 2px -1px oklch(0 0 0 / 0.4), 0 4px 12px -2px oklch(0 0 0 / 0.35);
+  --elevation-card-hover:
+    0 2px 4px -1px oklch(0 0 0 / 0.45), 0 12px 28px -4px oklch(0 0 0 / 0.5);
   --background: oklch(0.16 0.01 165);
   --foreground: oklch(0.985 0.01 165);
   --card: oklch(0.21 0.015 165);
@@ -128,6 +143,17 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Élévation des surfaces (style maquette landing : arrondi + ombre douce).
+     La primitive Card de shadcn est volontairement plate (ring-1, sans ombre) ;
+     on la rehausse ici plutôt que d'editer src/components/ui/, qui reste
+     regenerable par `shadcn add`. */
+  [data-slot="card"] {
+    box-shadow: var(--elevation-card);
+    transition:
+      box-shadow 200ms ease,
+      transform 200ms ease;
   }
 }
 
@@ -226,5 +252,12 @@
     opacity: 1;
     transform: none;
     animation: none;
+  }
+  /* Les cartes gardent leur ombre au survol, mais ne se soulèvent plus. */
+  [data-slot="card"] {
+    transition: none;
+  }
+  [data-slot="card"]:hover {
+    transform: none;
   }
 }

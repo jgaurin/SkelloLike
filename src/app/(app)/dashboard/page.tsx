@@ -136,7 +136,7 @@ export default async function DashboardPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <Link key={stat.label} href={stat.href}>
-              <Card className="transition hover:border-primary/40 hover:shadow-sm">
+              <Card className="h-full hover:-translate-y-0.5 hover:shadow-(--elevation-card-hover) hover:ring-primary/30">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
                     {stat.label}
