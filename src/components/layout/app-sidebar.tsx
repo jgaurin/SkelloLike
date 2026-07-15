@@ -25,6 +25,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 type NavItem = {
@@ -57,6 +58,7 @@ export function AppSidebar({
   currentLocationId: string;
 }) {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
@@ -64,9 +66,15 @@ export function AppSidebar({
   const renderItems = (items: NavItem[]) =>
     items.map((item) => (
       <SidebarMenuItem key={item.href}>
-        <SidebarMenuButton asChild isActive={isActive(item.href)}>
+        <SidebarMenuButton
+          asChild
+          isActive={isActive(item.href)}
+          tooltip={item.label}
+          onClick={() => setOpenMobile(false)}
+          className="h-9 gap-3 font-medium text-sidebar-foreground/80 transition-colors hover:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-active:shadow-sm"
+        >
           <Link href={item.href}>
-            <item.icon className="size-4" />
+            <item.icon className="size-4 shrink-0" />
             <span>{item.label}</span>
           </Link>
         </SidebarMenuButton>
@@ -74,11 +82,11 @@ export function AppSidebar({
     ));
 
   return (
-    <Sidebar collapsible="offcanvas">
-      <SidebarHeader>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="gap-0 border-b border-sidebar-border/60 pb-2">
         {/* Logo + sélecteur d'établissement sur une seule ligne */}
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold">
+        <div className="flex items-center gap-2 px-2 py-1.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-bold text-sidebar-primary-foreground shadow-sm">
             R
           </div>
           <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
@@ -90,24 +98,27 @@ export function AppSidebar({
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="gap-1 pt-2">
         <SidebarGroup>
-          <SidebarGroupLabel>Pilotage</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-2 text-[0.6875rem] font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
+            Pilotage
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderItems(mainNav)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Gestion</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-2 text-[0.6875rem] font-semibold tracking-wider text-sidebar-foreground/50 uppercase">
+            Gestion
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>{renderItems(manageNav)}</SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="border-t border-sidebar-border/60">
         <p className="px-2 py-1 text-xs text-sidebar-foreground/50 group-data-[collapsible=icon]:hidden">
           Phase 1 · MVP
         </p>
