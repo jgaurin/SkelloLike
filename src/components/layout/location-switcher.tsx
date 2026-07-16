@@ -41,7 +41,7 @@ export function LocationSwitcher({
   // Un seul établissement : pas de sélecteur, juste l'affichage.
   if (locations.length === 1) {
     return (
-      <div className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm">
+      <div className="flex items-center gap-2 rounded-xl bg-sidebar-accent/40 px-3 py-2 text-sm">
         <Building2 className="size-4 shrink-0 text-sidebar-foreground/70" />
         <span className="truncate font-medium">{locations[0].name}</span>
       </div>
@@ -50,7 +50,7 @@ export function LocationSwitcher({
 
   return (
     <Select value={currentId} onValueChange={onChange} disabled={isPending}>
-      <SelectTrigger className="h-9 w-full border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground">
+      <SelectTrigger className="h-9 w-full rounded-xl border-sidebar-border/60 bg-sidebar-accent/40 text-sidebar-foreground transition-colors hover:bg-sidebar-accent/70">
         <span className="flex min-w-0 items-center gap-2">
           <Building2 className="size-4 shrink-0" />
           <span className="min-w-0 truncate">

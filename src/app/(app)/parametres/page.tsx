@@ -89,7 +89,7 @@ export default async function ParametresPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           {settings.map((item) => (
             <Link key={item.href} href={item.href}>
-              <Card className="transition hover:border-primary/40 hover:shadow-sm">
+              <Card className="h-full hover:-translate-y-0.5 hover:shadow-(--elevation-card-hover) hover:ring-primary/30">
                 <CardHeader className="flex flex-row items-center gap-3 space-y-0">
                   <div className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <item.icon className="size-5" />
