@@ -176,15 +176,11 @@
     transition-duration: var(--duration-sidebar);
   }
 
-  [data-slot="sidebar-menu-button"] > span:last-child {
-    transition:
-      opacity 180ms var(--ease-out-quint),
-      transform 180ms var(--ease-out-quint);
-  }
 
+  /* `display: none` et pas `opacity: 0` : un label transparent occupe toujours
+     sa largeur dans le flex et decale l'icone hors du centre du bouton. */
   [data-collapsible="icon"] [data-slot="sidebar-menu-button"] > span:last-child {
-    opacity: 0;
-    transform: translateX(-4px);
+    display: none;
   }
 
   /* Bord cliquable : la barre de saisie s'epaissit et s'allume au survol. */
@@ -311,8 +307,7 @@
   [data-slot="sidebar-container"],
   [data-slot="sidebar-group-label"],
   [data-slot="sidebar-rail"],
-  [data-slot="sidebar-rail"]::after,
-  [data-slot="sidebar-menu-button"] > span:last-child {
+  [data-slot="sidebar-rail"]::after {
     transition: none;
   }
 }

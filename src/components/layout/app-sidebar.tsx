@@ -66,11 +66,13 @@ export function AppSidebar({
 
   // Replie, le <li> est pleine largeur : sans ce centrage le bouton size-10 se
   // cale a gauche, decale par rapport au monogramme.
+  // On vise l'attribut du wrapper plutot que `group-data-[…]` : le <li> porte
+  // deja `group/menu-item`, ce qui casse la resolution du groupe anonyme.
   const renderItems = (items: NavItem[]) =>
     items.map((item) => (
       <SidebarMenuItem
         key={item.href}
-        className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center"
+        className="in-data-[collapsible=icon]:flex in-data-[collapsible=icon]:justify-center"
       >
         <SidebarMenuButton
           asChild
