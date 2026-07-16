@@ -1,6 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="115" fill="#059669"/>
-  <!-- Lettre "R" tracée en vectoriel (indépendante de toute police installée),
-       calquée sur l'icône Android de Ritem. -->
-  <path fill="#ffffff" d="M150 128h122c53 0 92 36 92 88 0 38-21 67-54 80l64 88h-74l-55-79h-33v79h-52V128zm52 48v82h64c26 0 43-16 43-41s-17-41-43-41h-64z"/>
+  <!-- Favicon Ritem : le pictogramme « r. » en blanc sur le carré émeraude de
+       la marque. Sur un fond émeraude, le point ne peut pas rester émeraude
+       (il disparaîtrait) : on le passe en blanc, comme le « r ». Version
+       monochrome = adaptation contraste. Un favicon ne charge pas Poppins, donc
+       la lettre s'appuie sur la pile de polices système (géométrique proche). -->
+  <rect width="512" height="512" rx="120" fill="#059669"/>
+  <text x="150" y="368" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="360" font-weight="600" letter-spacing="-8" fill="#ffffff">r</text>
+  <circle cx="356" cy="330" r="46" fill="#ffffff"/>
 </svg>

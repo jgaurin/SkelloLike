@@ -1,4 +1,4 @@
-# SkelloLike
+# Ritem
 
 **Clone fonctionnel de Skello** — un SaaS de gestion des plannings et des
 ressources humaines pour les équipes horaires (restauration, retail,
@@ -75,14 +75,24 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 | `npm run db:status` | Afficher URLs + clés locales |
 | `npm run db:reset` | Réappliquer toutes les migrations (⚠️ efface les données) |
 | `npm run db:types` | Régénérer les types TypeScript depuis le schéma |
-| `npm run db:seed-demo` | Injecter des données de démo |
+| `npm run db:seed` | Réinjecter les données de démo (rejouable) |
 
 ### Données de démo
 
+`supabase/seed.sql` est chargé automatiquement par `npm run db:reset` (voir
+`[db.seed]` dans `supabase/config.toml`). Il crée une organisation démo
+**« Boulangerie Cloé »** (2 établissements, 16 employés, tous types de contrat,
+plannings + pointages sur juillet-août, absences, documents…).
+
 ```bash
-npm run db:seed-demo                                              # employés, postes, contrats, shifts
-docker exec -i supabase_db_SkelloLike psql -U postgres < supabase/seed-2months.sql   # 2 mois de planning publié
+npm run db:seed   # rejoue le seed sans réappliquer les migrations
 ```
+
+Comptes de test (mot de passe `Boulangerie2026!`) :
+- `chloe.marchand@boulangerie-cloe.fr` — gérante (org_owner, les 2 sites)
+- `karim.haddad@boulangerie-cloe.fr` — responsable Centre-Ville
+- `antoine.lemoine@boulangerie-cloe.fr` — responsable Gare
+- `theo.vasseur@boulangerie-cloe.fr` — employé (vendeur)
 
 ---
 
@@ -149,7 +159,7 @@ src/
     types/database.ts   types générés depuis le schéma
 supabase/
   migrations/       schéma versionné
-  seed-*.sql        données de démo
+  seed.sql          données de démo (chargé par `db reset`)
 ```
 
 ### Documents de référence
@@ -182,19 +192,4 @@ supabase/
   suppression du dossier pendant que le serveur tourne). Arrêtez le serveur,
   `rm -rf .next`, relancez `npm run dev`.
 
----
 
-## Roadmap
-
-- **Phase 1 (MVP)** ✅ : auth, multi-tenant, employés, postes, contrats, planning,
-  absences, compteurs.
-- **Phase 2** 🚧 : pointage/badgeuse ✅, pré-paie + majorations ✅, documents RH ✅,
-  multi-sites ✅, espace employé ✅. À venir : notifications email, régularisation
-  des pointages, pré-paie basée sur le réel.
-- **Phase 3** : app mobile employés, intégrations paie (Silae, Sage), SSO, API
-  publique, facturation Stripe.
-
----
-
-*Projet personnel — clone fonctionnel à but d'apprentissage. SkelloLike n'est pas
-affilié à Skello.*

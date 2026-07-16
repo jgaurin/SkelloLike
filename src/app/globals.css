@@ -96,6 +96,12 @@
   --sidebar-accent-foreground: oklch(0.98 0.01 165);
   --sidebar-border: oklch(0.4 0.05 165);
   --sidebar-ring: oklch(0.7 0.15 163);
+  /* Marque Ritem — encre (lettres) + accent (le point).
+     Les logos utilisent currentColor pour les lettres (donc s'adaptent au fond)
+     et --ritem-accent pour le point. Sur un fond émeraude, on surcharge
+     --ritem-accent avec une teinte claire pour garder le point lisible. */
+  --ritem-ink: oklch(0.28 0.05 163);
+  --ritem-accent: oklch(0.63 0.16 163);
 }
 
 .dark {
@@ -136,6 +142,9 @@
   --sidebar-accent-foreground: oklch(0.98 0.01 165);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.7 0.15 163);
+  /* En sombre, l'encre de la marque passe en clair pour rester lisible. */
+  --ritem-ink: oklch(0.95 0.02 165);
+  --ritem-accent: oklch(0.7 0.15 163);
 }
 
 @layer base {

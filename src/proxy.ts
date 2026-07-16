@@ -15,8 +15,10 @@ export const config = {
     /*
      * Match toutes les requêtes sauf :
      * - _next/static, _next/image, favicon
+     * - fichiers de métadonnées SEO (robots, sitemap, manifest) : doivent rester
+     *   accessibles aux robots sans redirection vers /login
      * - fichiers d'images
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

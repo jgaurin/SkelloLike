@@ -20,6 +20,58 @@ import { SectorsCarousel } from "./(marketing)/sectors-carousel";
 import { CountUp } from "./(marketing)/count-up";
 import { DemoCta } from "./(marketing)/demo-cta";
 import { ScrollDown } from "./(marketing)/scroll-down";
+import { RitemWordmark } from "@/components/brand/ritem-logo";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  absoluteUrl,
+} from "@/lib/seo";
+
+// Données structurées (JSON-LD) : aide Google à comprendre que Ritem est un
+// logiciel SaaS (rich results, panneau de connaissance).
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: absoluteUrl("/icon.png"),
+      description: SITE_DESCRIPTION,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      inLanguage: "fr-FR",
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: SITE_NAME,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web, iOS, Android",
+      url: SITE_URL,
+      description: SITE_DESCRIPTION,
+      inLanguage: "fr-FR",
+      featureList: [
+        "Planning des équipes (jour, semaine, mois)",
+        "Badgeuse et pointage",
+        "Gestion des absences et des congés",
+        "Préparation de la paie",
+      ],
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "EUR",
+        description: "Essai gratuit, sans engagement",
+      },
+    },
+  ],
+};
 
 /**
  * Landing page publique de Ritem.
@@ -72,17 +124,19 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* En-tête */}
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:h-18 sm:px-6">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xl font-bold tracking-tight sm:text-2xl"
+            aria-label="Ritem — accueil"
+            className="flex items-center text-[color:var(--ritem-ink)]"
           >
-            <span className="flex size-8 items-center justify-center rounded-xl bg-primary text-base font-bold text-primary-foreground shadow-sm sm:size-9 sm:text-lg">
-              R
-            </span>
-            <span className="text-foreground">Ritem</span>
+            <RitemWordmark className="h-7 w-auto sm:h-8" />
           </Link>
           <nav className="flex items-center gap-1 sm:gap-3">
             <Button variant="ghost" asChild className="hidden sm:inline-flex">
@@ -98,6 +152,7 @@ export default async function HomePage() {
         </div>
       </header>
 
+      <main>
       {/* Hero */}
       <section className="relative isolate flex min-h-[calc(100svh-4rem)] items-center overflow-hidden border-b border-border/60 lg:min-h-0">
         {/* Blobs émeraude animés en fond */}
@@ -363,15 +418,13 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      </main>
 
       {/* Pied de page */}
       <footer className="border-t border-border/60">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:px-6">
-          <span className="flex items-center gap-2 font-semibold text-foreground">
-            <span className="flex size-6 items-center justify-center rounded-lg bg-primary text-xs font-bold text-primary-foreground">
-              R
-            </span>
-            Ritem
+          <span className="flex items-center text-[color:var(--ritem-ink)]">
+            <RitemWordmark className="h-6 w-auto" title="Ritem" />
           </span>
           <span>© {new Date().getFullYear()} Ritem. Plannings &amp; RH.</span>
         </div>

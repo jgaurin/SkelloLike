@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { LocationSwitcher } from "@/components/layout/location-switcher";
+import { RitemMark, RitemWordmark } from "@/components/brand/ritem-logo";
 import {
   Sidebar,
   SidebarContent,
@@ -98,24 +99,27 @@ export function AppSidebar({
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="gap-3 px-3 pt-3 pb-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
-        {/* Monogramme : seul repere de marque une fois replie. */}
-        <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center">
-          {/* Meme gabarit que les boutons de nav (size-10) : les deux doivent
-              tomber sur le meme axe vertical une fois replie.
-              rounded-lg et pas -xl : avec --radius a 0.875rem, un -xl sur 40px
-              arrondit jusqu'au cercle. */}
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-base font-bold text-sidebar-primary-foreground">
-            R
-          </div>
-          <div className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
-            <p className="truncate text-sm font-semibold text-sidebar-foreground">
-              Ritem
-            </p>
-            <p className="truncate text-[0.6875rem] text-sidebar-foreground/50">
+        {/* Marque : wordmark deplie, pictogramme « r. » replie. Jamais les deux
+            cote a cote (ca se lirait « r.ritem »). Sur fond emeraude on remonte
+            l'accent en --sidebar-primary pour que le point reste lisible. */}
+        <Link
+          href="/dashboard"
+          onClick={() => setOpenMobile(false)}
+          className="flex items-center rounded-lg text-sidebar-foreground [--ritem-accent:var(--sidebar-primary)] group-data-[collapsible=icon]:justify-center"
+        >
+          {/* Deplie : logotype + nom d'organisation. */}
+          <span className="flex min-w-0 flex-col gap-1 px-1 group-data-[collapsible=icon]:hidden">
+            <RitemWordmark className="h-6 w-auto" />
+            <span className="truncate text-[0.6875rem] text-sidebar-foreground/50">
               {orgName}
-            </p>
-          </div>
-        </div>
+            </span>
+          </span>
+          {/* Replie : pictogramme seul, meme gabarit (size-10) que les boutons
+              de nav pour tomber sur le meme axe vertical. */}
+          <span className="hidden size-10 items-center justify-center group-data-[collapsible=icon]:flex">
+            <RitemMark className="size-8" />
+          </span>
+        </Link>
 
         {/* Etablissement : masque replie, faute de place pour un select. */}
         <div className="group-data-[collapsible=icon]:hidden">

@@ -18,7 +18,26 @@
       "Read(//tmp/**)",
       "Bash(flutter create *)",
       "Bash(flutter pub *)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3000\")",
+      "Bash(findstr \":54321\")",
+      "Bash(npm -v)",
+      "Read(//c/Program Files/**)",
+      "Read(//c/Program Files \\\\\\(x86\\\\\\)/**)",
+      "Read(//c/Users/joria/AppData/**)",
+      "Read(//c//**)",
+      "Bash(where.exe node.exe)",
+      "PowerShell(node -v)",
+      "PowerShell(npm -v)",
+      "PowerShell($paths = @\\(\"C:\\\\Program Files\\\\nodejs\\\\node.exe\",\"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\node.exe\",\"$env:APPDATA\\\\npm\\\\node.exe\",\"$env:LOCALAPPDATA\\\\Programs\\\\nodejs\\\\node.exe\",\"$env:USERPROFILE\\\\AppData\\\\Roaming\\\\nvm\\\\node.exe\"\\); foreach \\($p in $paths\\) { Write-Output \"$p : $\\(Test-Path $p\\)\" }; Get-ChildItem -Path \"C:\\\\\" -Filter \"node.exe\" -Recurse -ErrorAction SilentlyContinue -Depth 3 | Select-Object -First 5 FullName)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\node.exe\" -v)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\" -v)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;$env:PATH\"; cd \"c:\\\\Users\\\\joria\\\\Documents\\\\Ritem\"; npm install)",
+      "PowerShell($env:PATH = \"C:\\\\Program Files\\\\nodejs;$env:PATH\"; cd \"c:\\\\Users\\\\joria\\\\Documents\\\\Ritem\"; npm run dev)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000)"
     ]
   }
 }
