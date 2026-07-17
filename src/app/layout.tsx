@@ -64,6 +64,10 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
+  verification: {
+    // Vérification de propriété Google Search Console.
+    google: "KG_u-LeISGA_7-vBaxqiq_q_llp0RjihqmJy6sVCGaY",
+  },
   formatDetection: { telephone: false },
 };
 
