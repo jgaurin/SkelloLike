@@ -20,7 +20,8 @@ import { SectorsCarousel } from "./(marketing)/sectors-carousel";
 import { CountUp } from "./(marketing)/count-up";
 import { DemoCta } from "./(marketing)/demo-cta";
 import { ScrollDown } from "./(marketing)/scroll-down";
-import { RitemWordmark } from "@/components/brand/ritem-logo";
+import { SiteHeader } from "@/components/marketing/site-header";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import {
   SITE_URL,
   SITE_NAME,
@@ -128,29 +129,7 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* En-tête */}
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:h-18 sm:px-6">
-          <Link
-            href="/"
-            aria-label="Ritem — accueil"
-            className="flex items-center text-[color:var(--ritem-ink)]"
-          >
-            <RitemWordmark className="h-7 w-auto sm:h-8" />
-          </Link>
-          <nav className="flex items-center gap-1 sm:gap-3">
-            <Button variant="ghost" asChild className="hidden sm:inline-flex">
-              <Link href="/login">Se connecter</Link>
-            </Button>
-            <DemoCta
-              className="hidden shadow-sm sm:inline-flex"
-              withIcon={false}
-            >
-              Demander une démo
-            </DemoCta>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main>
       {/* Hero */}
@@ -420,15 +399,7 @@ export default async function HomePage() {
       </section>
       </main>
 
-      {/* Pied de page */}
-      <footer className="border-t border-border/60">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:px-6">
-          <span className="flex items-center text-[color:var(--ritem-ink)]">
-            <RitemWordmark className="h-6 w-auto" title="Ritem" />
-          </span>
-          <span>© {new Date().getFullYear()} Ritem. Plannings &amp; RH.</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

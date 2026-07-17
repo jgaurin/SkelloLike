@@ -1,28 +1,30 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 
 // Photos Unsplash (licence libre, usage commercial). Recadrées via paramètres
 // d'URL. q=75 (qualité autorisée par défaut côté Next 16).
 const IMG = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=800&h=1000&q=75`;
 
+// `href` renvoie vers la page secteur dédiée quand elle existe (maillage SEO).
 const SECTORS = [
-  { label: "Restauration", img: IMG("photo-1517248135467-4c7edcad34c4") },
-  { label: "Commerce", img: IMG("photo-1441986300917-64674bd600d8") },
-  { label: "Hôtellerie", img: IMG("photo-1566073771259-6a8506099945") },
-  { label: "Santé", img: IMG("photo-1576091160550-2173dba999ef") },
+  { label: "Restauration", img: IMG("photo-1517248135467-4c7edcad34c4"), href: "/secteurs/restaurant" },
+  { label: "Commerce", img: IMG("photo-1441986300917-64674bd600d8"), href: "/secteurs/commerce" },
+  { label: "Hôtellerie", img: IMG("photo-1566073771259-6a8506099945"), href: "/secteurs/hotellerie" },
+  { label: "Santé", img: IMG("photo-1576091160550-2173dba999ef"), href: "/secteurs/sante" },
   { label: "Industrie", img: IMG("photo-1581091226825-a6a2a5aee158") },
   { label: "Logistique", img: IMG("photo-1553413077-190dd305871c") },
-  { label: "Café & Bar", img: IMG("photo-1554118811-1e0d58224f24") },
-  { label: "Retail", img: IMG("photo-1513104890138-7c749659a591") },
+  { label: "Café & Bar", img: IMG("photo-1554118811-1e0d58224f24"), href: "/secteurs/cafe-bar" },
+  { label: "Retail", img: IMG("photo-1513104890138-7c749659a591"), href: "/secteurs/commerce" },
   { label: "Sport & Loisirs", img: IMG("photo-1534438327276-14e5300c3a48") },
   { label: "Beauté", img: IMG("photo-1560066984-138dadb4c035") },
 ];
 
-function Card({ label, img }: { label: string; img: string }) {
-  return (
-    <div className="group/card relative h-80 w-60 shrink-0 overflow-hidden rounded-3xl shadow-md ring-1 ring-border/50 transition-shadow duration-300 hover:shadow-xl sm:h-96 sm:w-72">
+function Card({ label, img, href }: { label: string; img: string; href?: string }) {
+  const inner = (
+    <>
       <Image
         src={img}
         alt={label}
@@ -38,7 +40,16 @@ function Card({ label, img }: { label: string; img: string }) {
         </span>
         <div className="mt-2 h-1 w-10 rounded-full bg-primary transition-all duration-300 group-hover/card:w-16" />
       </div>
-    </div>
+    </>
+  );
+  const cls =
+    "group/card relative h-80 w-60 shrink-0 overflow-hidden rounded-3xl shadow-md ring-1 ring-border/50 transition-shadow duration-300 hover:shadow-xl sm:h-96 sm:w-72";
+  return href ? (
+    <Link href={href} className={`block ${cls}`} aria-label={`Ritem pour ${label}`}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }
 
@@ -56,7 +67,7 @@ export function SectorsCarousel() {
 
       <div className="animate-marquee flex w-max gap-6 group-hover:[animation-play-state:paused]">
         {[...SECTORS, ...SECTORS].map((s, i) => (
-          <Card key={`${s.label}-${i}`} label={s.label} img={s.img} />
+          <Card key={`${s.label}-${i}`} label={s.label} img={s.img} href={s.href} />
         ))}
       </div>
     </div>

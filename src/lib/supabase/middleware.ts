@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
     "/invitation",
     "/confidentialite",
     "/suppression-compte",
+    "/secteurs",
   ];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route),
