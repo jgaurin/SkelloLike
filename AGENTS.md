@@ -35,7 +35,8 @@ propre design**. Jamais de code/assets/logo/contenus propriétaires copiés.
 ## Stack & conventions
 - Next.js 16 (App Router, Turbopack). Middleware = **`proxy`** (`src/proxy.ts`).
   `cookies()`, `params`, `searchParams` sont des **Promises** → `await`.
-- Supabase local. Clients : `src/lib/supabase/{client,server,middleware,admin}.ts`.
+- Supabase : **local (Docker) en dev, cloud en prod** (VPS `ritem.pro`, cf. README §Production).
+  Clients : `src/lib/supabase/{client,server,middleware,admin}.ts`.
   `admin` (service role) **uniquement** côté serveur, après vérif auth + autorisation.
 - Multi-tenant : isolation par RLS. Contexte user via `getAppContext()`
   (`src/lib/auth/context.ts`). **Vérifier auth+rôle dans chaque Server Action.**
@@ -43,10 +44,10 @@ propre design**. Jamais de code/assets/logo/contenus propriétaires copiés.
 - Avant de livrer un écran : `npx tsc --noEmit` doit passer + checklist du `DESIGN_SYSTEM.md`.
 
 ## Planning (rappels)
-- 3 vues obligatoires : **Jour / Semaine / Mois** (sélecteur dans la toolbar). Cf. cahier §6.1.
+- 3 vues obligatoires : **Jour / Semaine / Mois** (sélecteur dans la toolbar).
 - Sauvegarde immédiate de chaque action (création/déplacement/édition). « Publier »
   = rendre visible aux employés (brouillon → publié), pas une sauvegarde.
 
 ## Références
-- `CAHIER_DES_CHARGES.md` — spec fonctionnelle complète (24 sections, 3 phases).
+- `README.md` — stack, démarrage local, **section Production** (VPS/Apache/pm2/Supabase cloud).
 - `DESIGN_SYSTEM.md` — charte visuelle détaillée.

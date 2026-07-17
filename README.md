@@ -16,7 +16,7 @@ propriétaire copié).
 |---|---|
 | Framework | **Next.js 16** (App Router, Turbopack, React 19) |
 | Langage | TypeScript |
-| Base de données / Auth / Storage | **Supabase** (PostgreSQL, en local via Docker) |
+| Base de données / Auth / Storage | **Supabase** (PostgreSQL) — local via Docker en dev, **cloud** en prod |
 | UI | Tailwind CSS v4 + **shadcn/ui** (Radix), icônes **Lucide**, toasts **sonner** |
 | Excel | ExcelJS · CSV natif |
 | Isolation | Multi-tenant par **RLS** PostgreSQL |
@@ -96,6 +96,39 @@ Comptes de test (mot de passe `Boulangerie2026!`) :
 
 ---
 
+## Production
+
+Le site public est **https://ritem.pro**, hébergé sur un **VPS Ubuntu**.
+L'infra de prod diffère du dev local :
+
+| | Dev local | Production (VPS) |
+|---|---|---|
+| Base de données | Supabase local (Docker) | **Supabase cloud** |
+| Serveur Next.js | `next dev` (port 3000) | `next start` via **pm2** (port 3002) |
+| Reverse-proxy / TLS | — | **Apache** + Let's Encrypt → `localhost:3002` |
+
+- **Code** : `/var/www/ritem`, process pm2 nommé `ritem` (`npm run start`).
+- **Variables** : `/var/www/ritem/.env.production` (Supabase cloud + Resend) ;
+  `NEXT_PUBLIC_SITE_URL=https://ritem.pro`. Le mot de passe Postgres n'y est pas
+  (l'app n'utilise que les clés API) — il se réinitialise dans le dashboard Supabase.
+- **Déployer une mise à jour** :
+
+  ```bash
+  cd /var/www/ritem
+  git pull && npm run build && pm2 restart ritem
+  ```
+
+- **Réinitialiser la démo cloud** : rejouer `supabase/seed.sql` sur la base cloud
+  (SQL Editor du dashboard Supabase, ou `psql` via la connexion Postgres —
+  `sslmode=require`, `set search_path to public, extensions;`). Le seed est autonome.
+
+> **SEO** : `robots.txt`, `sitemap.xml`, favicon (`icon.svg`/`icon.png`/`favicon.ico`),
+> Open Graph et données structurées JSON-LD sont générés automatiquement
+> (voir `src/lib/seo.ts`). Après déploiement, soumettre le sitemap dans
+> **Google Search Console** pour accélérer l'indexation.
+
+---
+
 ## Fonctionnalités
 
 ### Gestion (espace manager)
@@ -163,7 +196,6 @@ supabase/
 ```
 
 ### Documents de référence
-- `CAHIER_DES_CHARGES.md` — spécification fonctionnelle complète (24 sections, 3 phases).
 - `DESIGN_SYSTEM.md` — charte visuelle et standards UX.
 - `AGENTS.md` / `CLAUDE.md` — règles projet pour les assistants de code.
 
