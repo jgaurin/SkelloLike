@@ -141,7 +141,7 @@ export default async function SectorPage({
             </nav>
 
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-              <span aria-hidden>{s.emoji}</span> {s.name}
+              <s.icon className="size-4" /> {s.name}
             </span>
 
             <h1 className="mt-5 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl">
@@ -256,7 +256,7 @@ export default async function SectorPage({
                   href={`/secteurs/${o.slug}`}
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium transition-colors hover:border-primary/40 hover:text-primary"
                 >
-                  <span aria-hidden>{o.emoji}</span> {o.name}
+                  <o.icon className="size-4" /> {o.name}
                 </Link>
               ))}
             </div>

@@ -5,6 +5,16 @@
  * pour {métier} » sans contenu dupliqué.
  */
 
+import {
+  UtensilsCrossed,
+  Croissant,
+  Store,
+  Hotel,
+  Coffee,
+  Stethoscope,
+  type LucideIcon,
+} from "lucide-react";
+
 export type SectorChallenge = { title: string; desc: string };
 
 export type Sector = {
@@ -13,8 +23,8 @@ export type Sector = {
   name: string;
   /** Libellé pluriel pour les titres, ex. « les restaurants ». */
   forWhom: string;
-  /** Emoji d'illustration (léger, sans dépendance image). */
-  emoji: string;
+  /** Icône Lucide (même set que le reste de l'UI). */
+  icon: LucideIcon;
   metaTitle: string;
   metaDescription: string;
   h1: string;
@@ -28,7 +38,7 @@ export const SECTORS: Sector[] = [
     slug: "restaurant",
     name: "Restaurant",
     forWhom: "les restaurants",
-    emoji: "🍽️",
+    icon: UtensilsCrossed,
     metaTitle: "Logiciel de planning pour restaurant — Ritem",
     metaDescription:
       "Ritem gère le planning de votre restaurant : services midi/soir, coupures, extras, pointage et préparation de la paie avec majorations. Essai gratuit.",
@@ -65,7 +75,7 @@ export const SECTORS: Sector[] = [
     slug: "boulangerie",
     name: "Boulangerie",
     forWhom: "les boulangeries-pâtisseries",
-    emoji: "🥐",
+    icon: Croissant,
     metaTitle: "Logiciel de planning pour boulangerie-pâtisserie — Ritem",
     metaDescription:
       "Ritem organise le planning de votre boulangerie : équipes de production dès l'aube, vente en journée, week-ends chargés, apprentis et pré-paie. Essai gratuit.",
@@ -102,7 +112,7 @@ export const SECTORS: Sector[] = [
     slug: "commerce",
     name: "Commerce & retail",
     forWhom: "les commerces et enseignes de retail",
-    emoji: "🛍️",
+    icon: Store,
     metaTitle: "Logiciel de planning pour commerce & retail — Ritem",
     metaDescription:
       "Ritem planifie les équipes de votre commerce : amplitude horaire, temps partiels, saisonnalité, multi-magasins, pointage et pré-paie. Essai gratuit.",
@@ -139,7 +149,7 @@ export const SECTORS: Sector[] = [
     slug: "hotellerie",
     name: "Hôtellerie",
     forWhom: "les hôtels",
-    emoji: "🏨",
+    icon: Hotel,
     metaTitle: "Logiciel de planning pour hôtellerie — Ritem",
     metaDescription:
       "Ritem gère les plannings de votre hôtel : réception 24/7, nuits, étages, saison, majorations et pré-paie, sur un ou plusieurs établissements. Essai gratuit.",
@@ -176,7 +186,7 @@ export const SECTORS: Sector[] = [
     slug: "cafe-bar",
     name: "Café & bar",
     forWhom: "les cafés et les bars",
-    emoji: "☕",
+    icon: Coffee,
     metaTitle: "Logiciel de planning pour café & bar — Ritem",
     metaDescription:
       "Ritem planifie vos équipes de café ou de bar : services décalés, extras pour les week-ends, heures de nuit majorées, pointage et pré-paie. Essai gratuit.",
@@ -213,7 +223,7 @@ export const SECTORS: Sector[] = [
     slug: "sante",
     name: "Santé",
     forWhom: "les établissements de santé",
-    emoji: "🩺",
+    icon: Stethoscope,
     metaTitle: "Logiciel de planning pour la santé — Ritem",
     metaDescription:
       "Ritem organise les plannings de vos équipes de santé : gardes, nuits, roulements, repos de sécurité, multi-sites et suivi des heures. Essai gratuit.",

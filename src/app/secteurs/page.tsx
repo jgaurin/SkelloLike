@@ -56,8 +56,8 @@ export default function SectorsHub() {
                   href={`/secteurs/${s.slug}`}
                   className="group flex flex-col rounded-2xl border border-border/60 bg-card p-6 shadow-[var(--elevation-card)] transition-shadow hover:shadow-[var(--elevation-card-hover)]"
                 >
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-2xl">
-                    <span aria-hidden>{s.emoji}</span>
+                  <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <s.icon className="size-6" />
                   </div>
                   <h2 className="mt-4 text-xl font-semibold group-hover:text-primary">
                     {s.name}
