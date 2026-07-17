@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -93,6 +94,16 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
         <Toaster richColors position="top-right" />
+        {/* Analytics Umami (auto-hébergé). Chargé en production uniquement.
+            S'active dès que stats.ritem.pro est en HTTPS. */}
+        {process.env.NODE_ENV === "production" && (
+          <Script
+            src="https://stats.ritem.pro/script.js"
+            data-website-id="4b61458e-7fb9-40d6-b2ac-4be021a7d1d8"
+            strategy="afterInteractive"
+            defer
+          />
+        )}
       </body>
     </html>
   );

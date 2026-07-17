@@ -40,6 +40,10 @@ export function AccessRequestForm() {
   useEffect(() => {
     if (state.ok) {
       formRef.current?.reset();
+      // Conversion : signale l'événement à Umami (analytics) s'il est chargé.
+      (
+        window as unknown as { umami?: { track: (event: string) => void } }
+      ).umami?.track("demo-submit");
     } else if (state.error) {
       toast.error(state.error);
     }
